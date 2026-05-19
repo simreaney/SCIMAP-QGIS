@@ -1,0 +1,2 @@
+# SCIMAP-QGIS
+SCIMAP-QGIS plugin
