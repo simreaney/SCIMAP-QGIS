@@ -1,5 +1,5 @@
 # SCIMAP Toolkit QGIS Plugin
-
+![SCIMAP Banner](img/SCIMAPbanner.jpg)
 This plugin provides the SCIMAP sediment, network index, and flood workflows inside QGIS Processing.
 It is a native QGIS companion to the SCIMAP web app and legacy flood workflow.
 
@@ -78,7 +78,7 @@ WhiteboxTools executable examples:
 
 ### Option 1: Install from ZIP (recommended for normal use)
 
-1. Download this repo as a zip file. 
+1. Download this repo as a zip file.
 2. In QGIS, go to Plugins > Manage and Install Plugins....
 3. Choose Install from ZIP.
 4. Select the plugin ZIP and install.
