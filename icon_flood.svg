@@ -1,0 +1,11 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="10" fill="#EFF6FF"/>
+
+  <!-- Water drop -->
+  <path d="M32 10C32 10 20 24 20 34c0 6.63 5.37 12 12 12s12-5.37 12-12c0-10-12-24-12-24z" fill="#0284C7"/>
+  <path d="M32 16c0 0-7 9-7 15 0 3.87 3.13 7 7 7" fill="none" stroke="#BAE6FD" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+
+  <!-- Flood waves -->
+  <path d="M12 44c4 0 4 3 8 3s4-3 8-3 4 3 8 3 4-3 8-3 4 3 8 3 4-3 8-3" fill="none" stroke="#0369A1" stroke-width="4" stroke-linecap="round"/>
+  <path d="M16 52c3 0 3 2 6 2s3-2 6-2 3 2 6 2 3-2 6-2 3 2 6 2 3-2 6-2" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" opacity="0.95"/>
+</svg>

@@ -1,37 +1,75 @@
-# SCIMAP Sediment QGIS Plugin
+# SCIMAP Toolkit QGIS Plugin
 
-This plugin adds the SCIMAP Sediment diffuse pollution risk workflow to QGIS Processing.
+This plugin provides the SCIMAP sediment, network index, and flood workflows inside QGIS Processing.
+It is a native QGIS companion to the SCIMAP web app and legacy flood workflow.
 
 It calculates:
 - Erosion Risk (raster)
 - Network Connectivity Risk (raster)
 - In-Channel Risk (raster)
 - Vector Stream Network (vector)
+- SCIMAP Flood Mean (raster)
+- SCIMAP Flood Standard Deviation (raster)
 
 The algorithm uses native WhiteboxTools calls for hydrological operations, including:
 - BreachDepressions
 - Slope
-- DInfFlowAccumulation
+- FD8FlowAccumulation
 - D8Pointer
-- DInfMassFlux
 - ExtractStreams
 - RasterStreamsToVector
+- DownslopeDistanceToStream
+
+The plugin also provides separate tools:
+- SCIMAP Network Index from DEM (raster output)
+- SCIMAP Flood from pre-computed connectivity, runoff, rainfall, and overland flow distance rasters
+- Overland Flow Distance to Point, a standalone WhiteboxTools DownslopeDistanceToStream utility (no GRASS or SAGA dependency)
+
+Flood outputs are limited to mean and standard deviation rasters.
 
 ## What The Plugin Does
 
-The plugin runs a SCIMAP-style source-to-stream routing workflow from three raster inputs:
+The sediment workflow runs a SCIMAP-style source-to-stream routing workflow from three raster inputs:
 - Digital Elevation Model (DEM)
 - Land Cover risk weighting raster
 - Rainfall raster
 
 High-level process:
 1. Fill/breach DEM depressions.
-2. Compute slope, D-Infinity flow accumulation, and D8 flow directions.
+2. Compute slope, FD8 flow accumulation, and D8 flow directions.
 3. Compute erosion risk.
-4. Compute network connectivity.
-5. Route rainfall-weighted area and routed source risk.
+4. Compute network connectivity using flow-path trace.
+5. Compute FD8-based rainfall-weighted and routed source-risk proxies.
 6. Compute in-channel risk as routed risk divided by routed rainfall-weighted area.
 7. Extract and vectorize stream network using a stream initiation threshold.
+
+Network Index tool process:
+1. Fill/breach DEM depressions.
+2. Compute slope, FD8 flow accumulation, and D8 flow directions.
+3. Compute network index using flow-path trace connectivity.
+4. Write network index raster.
+
+Flood tool process (mirrors pySCIMAP-Flood_2026.py, operating on pre-computed inputs rather than deriving them from a DEM):
+1. Load a pre-computed connectivity raster and a runoff / land-cover weights raster.
+2. Load all supplied rainfall pattern rasters (there is no Top-N selection step; every rainfall raster you provide is used).
+3. Load all supplied overland flow distance rasters.
+4. For each rainfall x overland-flow-distance combination, compute `normalise(rainfall) x (normalise(OFD) + 1.0)`, multiplied by connectivity x normalised runoff.
+5. Write the mean and standard deviation across all combinations.
+
+Overland Flow Distance to Point tool process:
+1. Optionally breach DEM depressions so flow direction is continuous (recommended; avoids broken flow paths at sinks).
+2. Rasterise the target point(s); if a channel network is supplied, snap each point to the nearest channel line first (within an optional maximum snap distance).
+3. Run WhiteboxTools DownslopeDistanceToStream to compute the downslope flow-path distance from each cell to the nearest target point, following the D8 flow direction derived from the DEM. Unlike a cost-distance surface, this is directional: cells that do not drain to a target point get no distance (NoData) rather than an omnidirectional straight-line-like distance.
+4. Write the travel-distance raster.
+
+## Tool Summary
+
+Use the plugin when you want:
+
+- Sediment mapping from DEM, land cover, and rainfall rasters.
+- A standalone network index from a DEM.
+- Flood risk mapping from pre-computed connectivity, runoff, rainfall, and overland flow distance rasters.
+- A standalone overland flow travel-distance raster to one or more points, for use as a Flood tool input or on its own.
 
 ## Requirements
 
@@ -76,13 +114,42 @@ You can run the algorithm from:
 - Plugins menu: SCIMAP > Run SCIMAP Standard
 - Processing Toolbox: SCIMAP > SCIMAP Sediment Diffuse Pollution Risk
 
+You can also run the standalone network tool from:
+- Processing Toolbox: SCIMAP > SCIMAP Network Index from DEM
+
+You can run the flood tool from:
+- Toolbar button: Run SCIMAP Flood
+- Plugins menu: SCIMAP > Run SCIMAP Flood
+- Processing Toolbox: SCIMAP > SCIMAP Flood
+
+You can run the overland flow distance tool from:
+- Toolbar button: Run Overland Flow Distance to Point
+- Plugins menu: SCIMAP > Run Overland Flow Distance to Point
+- Processing Toolbox: SCIMAP > Overland Flow Distance to Point
+
 ### Parameters
 
 - Digital Elevation Model (DEM): elevation raster
 - Land Cover Map / Risk Weighting: risk weighting raster
 - Rainfall Map: rainfall raster
 - Stream Initiation Threshold (m2): contributing area threshold for stream extraction (default: 800000)
+- Flow routing is fixed to FD8 (no D-Infinity option).
+- Connectivity is fixed to flow-path trace (Topological Netwet option removed).
 - WhiteboxTools executable (optional): path to `whitebox_tools` binary
+
+Flood tool parameters:
+- Connectivity Raster (pre-computed)
+- Runoff / Land Cover Weights Raster (pre-computed)
+- Rainfall Pattern Rasters: all supplied rasters are used (no Top-N selection)
+- Overland Flow Distance Rasters (pre-computed): one per impact point or scenario; generate these with the Overland Flow Distance to Point tool
+
+Overland Flow Distance to Point tool parameters:
+- Digital Elevation Model (DEM)
+- Target Point(s): a point layer; with more than one feature, the output is the distance to whichever point is nearest
+- Channel Network (optional): a line layer; if supplied, target point(s) are snapped to the nearest channel before the distance calculation
+- Maximum snap distance to channel (map units; ignored if no channel network supplied)
+- Fill DEM depressions before computing flow direction (recommended, avoids broken flow paths at sinks)
+- WhiteboxTools executable (optional)
 
 If WhiteboxTools path is supplied, the plugin stores it in QGIS settings and reuses it on later runs.
 
@@ -92,6 +159,16 @@ If WhiteboxTools path is supplied, the plugin stores it in QGIS settings and reu
 - Erosion Risk (raster)
 - In-Channel Risk (raster)
 - Vector Stream Network (vector)
+
+Standalone Network Index tool output:
+- Network Index (raster)
+
+Flood tool outputs:
+- SCIMAP-Flood Mean (raster)
+- SCIMAP-Flood Standard Deviation (raster)
+
+Overland Flow Distance to Point tool output:
+- Overland Flow Travel Distance (raster)
 
 ## Tips
 

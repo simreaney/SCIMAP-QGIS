@@ -1,0 +1,18 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="10" fill="#FFF7ED"/>
+
+  <!-- Ground slope -->
+  <path d="M10 46L26 34L38 38L54 24V50H10Z" fill="#D97706" opacity="0.18"/>
+  <path d="M10 46L26 34L38 38L54 24" fill="none" stroke="#B45309" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Runoff arrows -->
+  <path d="M18 18c6 0 6 4 12 4s6-4 12-4" fill="none" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+  <path d="M42 18l-5 5m5-5l-5-5" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 24c4 0 4 3 8 3s4-3 8-3" fill="none" stroke="#38BDF8" stroke-width="3" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- Sediment particles -->
+  <circle cx="22" cy="44" r="3.2" fill="#C2410C"/>
+  <circle cx="31" cy="41" r="2.6" fill="#EA580C"/>
+  <circle cx="40" cy="43" r="3.0" fill="#9A3412"/>
+  <circle cx="47" cy="36" r="2.2" fill="#B45309"/>
+</svg>

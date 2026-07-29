@@ -1,0 +1,21 @@
+[general]
+name=SCIMAP Toolkit
+name[de]=SCIMAP Toolkit
+name[es]=SCIMAP Toolkit
+qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
+description=SCIMAP tools for sediment, network index, and flood risk mapping within a catchment, using FD8 routing, flow-path trace connectivity, and flood impact-point workflows.
+description[de]=SCIMAP-Werkzeuge fur Sediment-, Netzwerkindex- und Hochwasserrisikokartierung in Einzugsgebieten mit FD8-Routing, Flussweg-Trace-Konnektivitat und Hochwasser-Wirkungspunkt-Workflows.
+description[es]=Herramientas SCIMAP para cartografia de sedimentos, indice de red y riesgo de inundacion dentro de una cuenca, con enrutamiento FD8, conectividad por trazado de flujo y flujos de trabajo con puntos de impacto de inundacion.
+version=1.3
+author=Sim M. Reaney, Durham University
+email=sim.reaney@durham.ac.uk
+about=Calculates SCIMAP spatial indices including network connectivity, erosion risk, in-channel risk, and flood mean/stdev outputs using native WhiteboxTools hydrological processing (BreachDepressions, FD8FlowAccumulation, D8Pointer, CostDistance) and a flow-path trace connectivity approach. The plugin includes standalone SCIMAP Network Index from DEM and SCIMAP Flood tools. Main SCIMAP workflow inputs are DEM, Land Cover Risk Weighting, and Rainfall rasters; the Flood workflow operates on pre-computed connectivity, runoff, rainfall, and overland flow distance rasters. Outputs include erosion, connectivity, in-channel risk rasters, a vector stream network, flood mean/stdev rasters, and an overland flow travel-distance raster. Depends upon the WhiteboxTools executable also being installed. https://doi.org/10.1016/j.ecolmodel.2010.08.022
+about[de]=Berechnet SCIMAP-Raumindizes einschliesslich Netzwerkkonnektivitat, Erosionsrisiko, Risiko im Gewasser und Hochwasser-Mittelwert-/Standardabweichungs-Ausgaben mit nativer WhiteboxTools-Hydrologieverarbeitung (BreachDepressions, FD8FlowAccumulation, D8Pointer) und einem Flussweg-Trace-Konnektivitatsansatz. Das Plugin enthalt eigenstandige Werkzeuge fur SCIMAP Netzwerkindex aus DEM und SCIMAP Hochwasser. Haupteingaben fur den SCIMAP-Workflow sind DEM-, Landbedeckungs-/Risikogewichtungs- und Niederschlagsraster; fur Hochwasser werden zusatzlich punktbasierte Wirkungspunkte und Niederschlagsmuster-Raster verwendet. Ausgaben umfassen Erosions-, Konnektivitats- und Gewasserrisiko-Raster, ein Vektor-Gewassernetz sowie Hochwasser-Mittelwert-/Standardabweichungs-Raster. WhiteboxTools muss ebenfalls installiert sein. https://doi.org/10.1016/j.ecolmodel.2010.08.022
+about[es]=Calcula indices espaciales SCIMAP, incluida la conectividad de red, el riesgo de erosion, el riesgo en cauce y las salidas de media/desviacion estandar de inundacion, mediante el procesamiento hidrologico nativo de WhiteboxTools (BreachDepressions, FD8FlowAccumulation, D8Pointer) y un enfoque de conectividad por trazado de flujo. El plugin incluye herramientas independientes para Indice de Red SCIMAP desde DEM y SCIMAP Inundacion. Las entradas principales del flujo de trabajo SCIMAP son raster DEM, Cobertura del Suelo / Ponderacion de Riesgo y Precipitacion; el flujo de inundacion tambien utiliza puntos de impacto y raster de patrones de precipitacion. Las salidas incluyen raster de erosion, conectividad y riesgo en cauce, una red vectorial de cauces y raster de media/desviacion estandar de inundacion. Tambien debe estar instalado el ejecutable WhiteboxTools. https://doi.org/10.1016/j.ecolmodel.2010.08.022
+tracker=https://github.com/simreaney/SCIMAP-QGIS/issues
+repository=https://github.com/simreaney/SCIMAP-QGIS
+category=Processing
+homepage=https://scimap.org.uk
+tags=scimap,hydrology,erosion,diffuse pollution,risk,flood
+icon=icon.svg
