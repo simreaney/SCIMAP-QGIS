@@ -23,9 +23,8 @@ The algorithm uses native WhiteboxTools calls for hydrological operations, inclu
 The plugin also provides separate tools:
 - SCIMAP Network Index from DEM (raster output)
 - SCIMAP Flood from pre-computed connectivity, runoff, rainfall, and overland flow distance rasters
-- Overland Flow Distance to Point, a standalone WhiteboxTools DownslopeDistanceToStream utility (no GRASS or SAGA dependency)
 
-Flood outputs are limited to mean and standard deviation rasters.
+Flood outputs are the mean and standard deviation rasters.
 
 ## What The Plugin Does
 
@@ -56,12 +55,6 @@ Flood tool process (mirrors pySCIMAP-Flood_2026.py, operating on pre-computed in
 4. For each rainfall x overland-flow-distance combination, compute `normalise(rainfall) x (normalise(OFD) + 1.0)`, multiplied by connectivity x normalised runoff.
 5. Write the mean and standard deviation across all combinations.
 
-Overland Flow Distance to Point tool process:
-1. Optionally breach DEM depressions so flow direction is continuous (recommended; avoids broken flow paths at sinks).
-2. Rasterise the target point(s); if a channel network is supplied, snap each point to the nearest channel line first (within an optional maximum snap distance).
-3. Run WhiteboxTools DownslopeDistanceToStream to compute the downslope flow-path distance from each cell to the nearest target point, following the D8 flow direction derived from the DEM. Unlike a cost-distance surface, this is directional: cells that do not drain to a target point get no distance (NoData) rather than an omnidirectional straight-line-like distance.
-4. Write the travel-distance raster.
-
 ## Tool Summary
 
 Use the plugin when you want:
@@ -85,11 +78,7 @@ WhiteboxTools executable examples:
 
 ### Option 1: Install from ZIP (recommended for normal use)
 
-1. Package the plugin folder so the ZIP root contains files like:
-   - `metadata.txt`
-   - `__init__.py`
-   - `scimap_algorithm.py`
-   - `scimap_provider.py`
+1. Download this repo as a zip file. 
 2. In QGIS, go to Plugins > Manage and Install Plugins....
 3. Choose Install from ZIP.
 4. Select the plugin ZIP and install.
@@ -107,6 +96,9 @@ Typical profile plugin locations:
 - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/` (or QGIS4 profile)
 - Windows: `%APPDATA%\\QGIS\\QGIS3\\profiles\\default\\python\\plugins\\` (or QGIS4 profile)
 
+### Option 3: Install from the QGISm plugin directory
+- Current pending review
+
 ## How To Use
 
 You can run the algorithm from:
@@ -121,11 +113,6 @@ You can run the flood tool from:
 - Toolbar button: Run SCIMAP Flood
 - Plugins menu: SCIMAP > Run SCIMAP Flood
 - Processing Toolbox: SCIMAP > SCIMAP Flood
-
-You can run the overland flow distance tool from:
-- Toolbar button: Run Overland Flow Distance to Point
-- Plugins menu: SCIMAP > Run Overland Flow Distance to Point
-- Processing Toolbox: SCIMAP > Overland Flow Distance to Point
 
 ### Parameters
 
@@ -143,14 +130,6 @@ Flood tool parameters:
 - Rainfall Pattern Rasters: all supplied rasters are used (no Top-N selection)
 - Overland Flow Distance Rasters (pre-computed): one per impact point or scenario; generate these with the Overland Flow Distance to Point tool
 
-Overland Flow Distance to Point tool parameters:
-- Digital Elevation Model (DEM)
-- Target Point(s): a point layer; with more than one feature, the output is the distance to whichever point is nearest
-- Channel Network (optional): a line layer; if supplied, target point(s) are snapped to the nearest channel before the distance calculation
-- Maximum snap distance to channel (map units; ignored if no channel network supplied)
-- Fill DEM depressions before computing flow direction (recommended, avoids broken flow paths at sinks)
-- WhiteboxTools executable (optional)
-
 If WhiteboxTools path is supplied, the plugin stores it in QGIS settings and reuses it on later runs.
 
 ### Outputs
@@ -167,13 +146,10 @@ Flood tool outputs:
 - SCIMAP-Flood Mean (raster)
 - SCIMAP-Flood Standard Deviation (raster)
 
-Overland Flow Distance to Point tool output:
-- Overland Flow Travel Distance (raster)
-
 ## Tips
 
 - Choose a stream threshold appropriate for raster resolution. The threshold is area-based and is converted internally to cell count.
-- For very high-resolution DEMs, runtime can be long.
+- For very high-resolution DEMs, runtime can be long. Minutes to hours for large catchmnts (2000 km2 plus)
 - If outputs look sparse or too dense, tune Stream Initiation Threshold first.
 
 ## Troubleshooting
@@ -189,6 +165,4 @@ Overland Flow Distance to Point tool output:
 ## Citation
 
 Reaney, S., Lane, S., Heathwaite, A., and Dugdale, L. (2011).
-Risk-based modelling of diffuse land use impacts from rural landscapes upon salmonid fry abundance.
-Ecological Modelling, 222(4), 1016-1029.
-https://doi.org/10.1016/j.ecolmodel.2010.08.022
+Risk-based modelling of diffuse land use impacts from rural landscapes upon salmonid fry abundance. _Ecological Modelling_, 222(4), 1016-1029. https://doi.org/10.1016/j.ecolmodel.2010.08.022

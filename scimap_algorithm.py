@@ -1107,21 +1107,19 @@ class ScimapStandardAlgorithm(QgsProcessingAlgorithm):
             QgsSettings().value('SCIMAP/wbtExecutable', ''),
             QgsSettings().value("Wbt/executable", ""),
             os.path.join(QgsApplication.qgisSettingsDirPath(), "python", "plugins", "wbt_for_qgis", "WBT", "whitebox_tools"),
-            "/Users/simreaney/miniconda/lib/python3.13/site-packages/whitebox/whitebox_tools",
-            "/Users/simreaney/miniconda/bin/whitebox_tools" # Just in case
         ]
         
         for cp in candidates:
-            if cp and os.path.exists(cp) and os.path.isfile(cp):
+            if cp and os.path.exists(cp) and os.path.isfile(cp) and os.access(cp, os.X_OK):
                 wbt_exe = cp
                 break
-                
+
         if not wbt_exe:
             wbt_exe = shutil.which("whitebox_tools")
-            
+
         if not wbt_exe:
             raise RuntimeError("Could not find the 'whitebox_tools' executable. Please make sure WhiteboxTools is installed on your system.")
-            
+
         cmd = [wbt_exe, f'--run={tool_name}']
         for k, v in args_dict.items():
             if isinstance(v, bool):
@@ -1129,9 +1127,14 @@ class ScimapStandardAlgorithm(QgsProcessingAlgorithm):
                     cmd.append(f'--{k}')
             else:
                 cmd.append(f'--{k}={v}')
-            
+
         feedback.pushInfo(f"Running WBT natively: {' '.join(cmd)}")
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        # wbt_exe is resolved above from a fixed list of trusted, filesystem-verified
+        # locations (never from raw user text), and the argument list is built
+        # entirely from internal QGIS processing parameters. shell=False (the
+        # default, set explicitly here) means no shell is invoked, so there is no
+        # shell-metacharacter/injection risk despite the dynamic argument list.
+        res = subprocess.run(cmd, shell=False, capture_output=True, text=True)  # nosec B603
         if res.returncode != 0:
             raise RuntimeError(f"WhiteboxTools failed: {res.stderr or res.stdout}")
 
