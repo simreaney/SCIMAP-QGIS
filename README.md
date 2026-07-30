@@ -74,6 +74,66 @@ WhiteboxTools executable examples:
 - macOS/Linux: `whitebox_tools` (no extension)
 - Windows: `whitebox_tools.exe`
 
+## Installing WhiteboxTools and Numba
+
+WhiteboxTools is required. Numba is optional: it speeds up the Flood tool's raster combination step, and the plugin falls back to a pure NumPy implementation automatically if Numba is not installed.
+
+### WhiteboxTools
+
+Download the pre-compiled executable for your platform from the official downloads page (https://www.whiteboxgeo.com/download-whiteboxtools/) or the GitHub releases page (https://github.com/jblindsay/whitebox-tools/releases). You do not need to build it from source.
+
+Once you have the executable, either:
+- put it on your system PATH so the plugin can auto-detect it, or
+- leave it wherever you like and paste the full path into the plugin's "WhiteboxTools executable" parameter the first time you run a SCIMAP tool (the plugin saves this path in QGIS settings and reuses it afterwards).
+
+**Windows**
+1. Download the Windows build (zip) and extract it, e.g. to `C:\WBT\`.
+2. Confirm `whitebox_tools.exe` is present in that folder.
+3. Either add `C:\WBT` to your system PATH, or supply the full path (`C:\WBT\whitebox_tools.exe`) in the plugin.
+
+**macOS**
+1. Download the macOS build (zip) and unzip it.
+2. Make it executable: `chmod +x whitebox_tools`.
+3. Gatekeeper may block the first run since the binary is unsigned. Either allow it via System Settings > Privacy & Security > "Allow Anyway" after the first blocked attempt, or clear the quarantine flag: `xattr -d com.apple.quarantine /path/to/whitebox_tools`.
+4. Move it somewhere on PATH (e.g. `/usr/local/bin/`), or supply the full path in the plugin.
+
+**Linux**
+1. Download the Linux build (zip/tar.gz) and extract it.
+2. Make it executable: `chmod +x whitebox_tools`.
+3. Move it somewhere on PATH (e.g. `~/.local/bin/` or `/usr/local/bin/`), or supply the full path in the plugin.
+
+### Numba
+
+Numba must be installed into the same Python environment that QGIS uses to run Processing scripts, which is often not your system/default Python. To find it, open QGIS's Python Console (Plugins > Python Console) and run:
+```python
+import sys; print(sys.executable)
+```
+Then install Numba using that interpreter.
+
+**Windows**
+Open the OSGeo4W Shell (Start Menu > QGIS > OSGeo4W Shell) and run:
+```
+python -m pip install numba
+```
+
+**macOS**
+Open Terminal and run pip using the Python bundled inside the QGIS app, for example:
+```
+/Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install numba
+```
+(Confirm the exact path with the `sys.executable` check above, as it can vary by QGIS version/install method.)
+
+**Linux**
+If QGIS was installed via your distro's package manager and uses the system Python:
+```
+python3 -m pip install --user numba
+```
+If QGIS was installed via Flatpak, install inside its sandbox instead:
+```
+flatpak run --command=bash org.qgis.qgis
+pip install --user numba
+```
+
 ## Installation
 
 ### Option 1: Install from ZIP (recommended for normal use)
@@ -96,7 +156,7 @@ Typical profile plugin locations:
 - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/` (or QGIS4 profile)
 - Windows: `%APPDATA%\\QGIS\\QGIS3\\profiles\\default\\python\\plugins\\` (or QGIS4 profile)
 
-### Option 3: Install from the QGISm plugin directory
+### Option 3: Install from the QGIS plugin directory
 - Current pending review
 
 ## How To Use
