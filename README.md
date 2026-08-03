@@ -136,28 +136,18 @@ pip install --user numba
 
 ## Installation
 
-### Option 1: Install from ZIP (recommended for normal use)
+### Option 1: Install from Plugins Menu (recommended for normal use)
+1. In QGIS, go to the 'Plugins' menu and select 'Manage and Install Plugins'
+2. Search for 'SCIMAP Toolkit'
+3. Click 'Install Plugin' and then click 'Close'
+4. Access the tools wither under the Plugins menu, in the processing panel or via the toolbar icons  
 
+### Option 2: Install from the QGIS plugin directory
 1. Download this repo as a zip file.
 2. In QGIS, go to Plugins > Manage and Install Plugins....
 3. Choose Install from ZIP.
 4. Select the plugin ZIP and install.
 5. Enable the plugin if prompted.
-
-### Option 2: Install as a development plugin folder
-
-1. Copy the `qgis_plugin` directory into your QGIS profile plugins directory.
-2. Rename that copied folder to your plugin package name if needed.
-3. Restart QGIS.
-4. Open Plugins > Manage and Install Plugins... and enable SCIMAP Sediment.
-
-Typical profile plugin locations:
-- macOS: `~/Library/Application Support/QGIS/QGIS4/profiles/default/python/plugins/`
-- Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/` (or QGIS4 profile)
-- Windows: `%APPDATA%\\QGIS\\QGIS3\\profiles\\default\\python\\plugins\\` (or QGIS4 profile)
-
-### Option 3: Install from the QGIS plugin directory
-- Current pending review
 
 ## How To Use
 
