@@ -199,7 +199,7 @@ Flood tool outputs:
 ## Tips
 
 - Choose a stream threshold appropriate for raster resolution. The threshold is area-based and is converted internally to cell count.
-- For very high-resolution DEMs, runtime can be long. Minutes to hours for large catchmnts (2000 km2 plus)
+- For very high-resolution DEMs, runtime can be long. Minutes to hours for large catchments (2000 km2 plus)
 - If outputs look sparse or too dense, tune Stream Initiation Threshold first.
 
 ## Troubleshooting
@@ -216,3 +216,4 @@ Flood tool outputs:
 
 Reaney, S., Lane, S., Heathwaite, A., and Dugdale, L. (2011).
 Risk-based modelling of diffuse land use impacts from rural landscapes upon salmonid fry abundance. _Ecological Modelling_, 222(4), 1016-1029. https://doi.org/10.1016/j.ecolmodel.2010.08.022
+Reaney, Sim M. (2022) Spatial targeting of nature‐based solutions for flood risk management within river catchments. Journal of Flood Risk Management Volume 15, Issue 3 e12803 https://doi.org/10.1111/jfr3.12803
