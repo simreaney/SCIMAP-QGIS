@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="10" fill="#F3F8F5"/>
+
+  <!-- Catchment boundary -->
+  <path d="M12 22 Q20 8 34 12 Q50 16 52 30 Q54 46 40 52 Q24 58 15 46 Q8 36 12 22 Z"
+        fill="#10B981" fill-opacity="0.18" stroke="#047857" stroke-width="3"
+        stroke-dasharray="6 4" stroke-linejoin="round"/>
+
+  <!-- Drainage network converging on the outlet -->
+  <path d="M22 20 L30 34 M42 20 L34 32 M30 34 L34 32 L33 44" stroke="#0F766E"
+        stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pour point -->
+  <circle cx="33" cy="47" r="6" fill="#B91C1C"/>
+  <circle cx="33" cy="47" r="2.4" fill="#FEE2E2"/>
+</svg>

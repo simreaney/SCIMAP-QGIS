@@ -1,219 +1,210 @@
 # SCIMAP Toolkit QGIS Plugin
-![SCIMAP Banner](img/SCIMAPbanner.jpg)
-This plugin provides the SCIMAP sediment, network index, and flood workflows inside QGIS Processing.
-It is a native QGIS companion to the SCIMAP web app and legacy flood workflow.
 
-It calculates:
-- Erosion Risk (raster)
-- Network Connectivity Risk (raster)
-- In-Channel Risk (raster)
-- Vector Stream Network (vector)
-- SCIMAP Flood Mean (raster)
-- SCIMAP Flood Standard Deviation (raster)
+A native QGIS companion to the SCIMAP web application. It brings the SCIMAP
+catchment, sediment, FIO, network index and flood workflows into QGIS
+Processing, plus a guided panel that mirrors the web app's step-by-step
+workflow.
 
-The algorithm uses native WhiteboxTools calls for hydrological operations, including:
-- BreachDepressions
-- Slope
-- FD8FlowAccumulation
-- D8Pointer
-- ExtractStreams
-- RasterStreamsToVector
-- DownslopeDistanceToStream
+Everything runs on layers you supply — there is no bundled national dataset and
+no server, so the plugin works anywhere in the world.
 
-The plugin also provides separate tools:
-- SCIMAP Network Index from DEM (raster output)
-- SCIMAP Flood from pre-computed connectivity, runoff, rainfall, and overland flow distance rasters
+## Tools
 
-Flood outputs are the mean and standard deviation rasters.
+| Tool | Purpose |
+|---|---|
+| **SCIMAP Sediment** | Fine sediment / diffuse pollution risk from DEM, land cover and rainfall |
+| **SCIMAP FIO** | Faecal indicator organism delivery risk from DEM, an FIO concentration raster and rainfall |
+| **Delineate Catchment** | Catchment boundary upstream of a pour point, with snapping to the channel network |
+| **Apply Land Cover Risk Weights** | Reclassify a land cover raster into SCIMAP risk weights |
+| **Network Index** | Connectivity from a DEM alone, using uniform rainfall |
+| **SCIMAP Flood** | Flood risk mean/stdev from pre-computed connectivity, runoff, rainfall and overland flow distance rasters |
+| **Overland Flow Distance to Point** | Downslope flow-path distance to the nearest target point |
+| **Export SCIMAP Results** | GeoPackage, KML, point vector and Cloud-Optimised GeoTIFF exports |
 
-## What The Plugin Does
+Hydrology runs through native WhiteboxTools calls — `BreachDepressions`,
+`Slope`, `FD8FlowAccumulation`, `D8FlowAccumulation`, `D8Pointer`,
+`ExtractStreams`, `RasterStreamsToVector`, `Watershed`, `DInfMassFlux`,
+`DownslopeDistanceToStream` — with no GRASS or SAGA dependency. Connectivity and
+the SCIMAP indices are pure NumPy, optionally accelerated by Numba.
 
-The sediment workflow runs a SCIMAP-style source-to-stream routing workflow from three raster inputs:
-- Digital Elevation Model (DEM)
-- Land Cover risk weighting raster
-- Rainfall raster
+## The SCIMAP panel
 
-High-level process:
-1. Fill/breach DEM depressions.
-2. Compute slope, FD8 flow accumulation, and D8 flow directions.
-3. Compute erosion risk.
-4. Compute network connectivity using flow-path trace.
-5. Compute FD8-based rainfall-weighted and routed source-risk proxies.
-6. Compute in-channel risk as routed risk divided by routed rainfall-weighted area.
-7. Extract and vectorize stream network using a stream initiation threshold.
+Open it from the SCIMAP toolbar button or **Plugins → SCIMAP → SCIMAP Panel**.
+Its five tabs follow the web application's workflow:
 
-Network Index tool process:
-1. Fill/breach DEM depressions.
-2. Compute slope, FD8 flow accumulation, and D8 flow directions.
-3. Compute network index using flow-path trace connectivity.
-4. Write network index raster.
+- **Catchment** — pick a DEM, click a pour point on the map, delineate.
+- **Parameters** — edit the risk weight for each of the seven SCIMAP land cover
+  classes; import and export parameter sets as XML, interchangeable with the web
+  application's Parameters workspace.
+- **Run** — choose Sediment or FIO, pick your layers, optionally clip the DEM,
+  land cover/FIO and rainfall layers to a catchment boundary, run. Delineating a
+  catchment on the Catchment tab fills this in automatically.
+- **Flood** — click impact points on the map, turn them into overland flow
+  distance rasters, then run SCIMAP Flood.
+- **Results** — session run history, live colour-ramp switching, exports, and the
+  WhiteboxTools executable setting.
 
-Flood tool process (mirrors pySCIMAP-Flood_2026.py, operating on pre-computed inputs rather than deriving them from a DEM):
-1. Load a pre-computed connectivity raster and a runoff / land-cover weights raster.
-2. Load all supplied rainfall pattern rasters (there is no Top-N selection step; every rainfall raster you provide is used).
-3. Load all supplied overland flow distance rasters.
-4. For each rainfall x overland-flow-distance combination, compute `normalise(rainfall) x (normalise(OFD) + 1.0)`, multiplied by connectivity x normalised runoff.
-5. Write the mean and standard deviation across all combinations.
+Runs are cancellable, and progress and log messages appear at the bottom of the
+panel. Everything the panel does is also available as a Processing algorithm, so
+it all works in batch mode and inside Processing models.
 
-## Tool Summary
+## Land cover risk weighting
 
-Use the plugin when you want:
+The web application holds its risk weights in a Parameters workspace; the plugin
+carries the same tables, so you do **not** need to arrive with a pre-weighted
+raster.
 
-- Sediment mapping from DEM, land cover, and rainfall rasters.
-- A standalone network index from a DEM.
-- Flood risk mapping from pre-computed connectivity, runoff, rainfall, and overland flow distance rasters.
-- A standalone overland flow travel-distance raster to one or more points, for use as a Flood tool input or on its own.
+1. Raw land cover IDs are mapped to SCIMAP classes 1–7 using the remap table,
+   pre-filled with the CEH Land Cover Map mapping (LCM 1–23 → SCIMAP 1–7).
+2. Each SCIMAP class is given a risk weight, defaulting to the SCIMAP values
+   (Woodland 0.2, Arable 1.0, Improved Grassland 0.3, Extensive Grassland 0.15,
+   Moorland 0.3, Urban 0.5, Other 0.5).
+3. Values present in the data but absent from the weight table are backfilled
+   with the fallback class's weight (class 7 by default), so there are no
+   internal NoData holes. A warning lists the unmapped IDs.
+
+Both tables are editable per run. If your raster already uses SCIMAP classes,
+tick **Land cover already uses SCIMAP classes (1-7)** to skip the remap. If it is
+already a risk weighting, tick **Land cover is already a risk weighting** and it
+is used as-is — the behaviour of plugin versions before 2.0.
+
+A **Parameter set XML** file overrides the weight table, and accepts both
+SCIMAP-class and legacy CEH-class XML exported from the web application.
+
+## How the risk mapping works
+
+SCIMAP Sediment and SCIMAP FIO run the same pipeline, differing only in where the
+per-cell risk weight comes from:
+
+1. Breach DEM depressions.
+2. Compute slope, FD8 flow accumulation and D8 flow directions; extract the
+   stream network.
+3. Derive the risk weight — land cover reclassification (Sediment) or FIO
+   concentration divided by the normalisation constant (FIO).
+4. Erosion risk = `|accumulation| x cell area x tan(slope) x risk weight`,
+   normalised between its 5th and 95th percentiles.
+5. Connectivity via flow-path trace: each cell takes the minimum topographic
+   wetness index along its downstream path to the channel network.
+6. Risk concentration = accumulated risk (erosion x connectivity, routed across
+   the *whole* catchment with WhiteboxTools `DInfMassFlux`) divided by the
+   rainfall-weighted catchment area (routed the same way), matching the SCIMAP
+   web application. This is computed for every cell in the catchment, not just
+   the channel network.
+7. Vectorise the stream network and attach the mean risk concentration along
+   each reach as a `Risk` field — the **Instream Risk Concentration** output.
+   A separate, coarser cut of the same ratio (cells at or above the stream
+   initiation threshold) feeds the optional stream risk points.
+
+Both the risk loading and the rainfall loading are routed downslope with
+WhiteboxTools `DInfMassFlux`; if that routing fails the run falls back to a
+local-scaling approximation (`contributing area x scaled value`) with a
+warning.
+
+## Inputs and alignment
+
+Every input is an ordinary QGIS raster or vector layer. Land cover, rainfall and
+FIO rasters no longer need to be pre-aligned to the DEM — anything on a different
+grid is resampled onto the DEM before analysis, and a warning says so. The DEM
+defines the output grid, extent and CRS.
+
+The Flood and Overland Flow Distance tools still require their pre-computed
+inputs to share an identical grid, and will refuse to run otherwise.
+
+## Outputs and styling
+
+Results are styled automatically with the web application's colour ramps,
+stretched between the 5th and 95th percentiles: Magma for erosion, Viridis for
+connectivity, Plasma for instream risk concentration and stream risk points,
+Spectral for flood. Pick a single ramp for every layer with the **Colour ramp**
+parameter, or switch ramps after the fact in the panel's Results tab.
+
+| Tool | Outputs |
+|---|---|
+| Sediment / FIO | Erosion risk, connectivity, instream risk concentration network; optional stream risk points, KML and SCIMAP class raster |
+| Delineate Catchment | Catchment boundary; optional snapped pour point and basin raster |
+| Apply Land Cover Risk Weights | Risk weighting raster; optional SCIMAP class raster |
+| Network Index | Network index raster |
+| SCIMAP Flood | Flood mean and standard deviation rasters |
+| Overland Flow Distance | Travel-distance raster |
 
 ## Requirements
 
-- QGIS 3.28 to 4.x (tested on QGIS 4.0.1)
-- WhiteboxTools executable available on your system
-- Input rasters must be aligned (same extent, resolution, and CRS)
+- QGIS 3.28 or newer (tested on 3.42 and 4.x)
+- The WhiteboxTools executable (`whitebox_tools`, or `whitebox_tools.exe` on
+  Windows) available on your system
 
-WhiteboxTools executable examples:
-- macOS/Linux: `whitebox_tools` (no extension)
-- Windows: `whitebox_tools.exe`
+Set the executable once in the panel's Settings section, or per run with the
+**WhiteboxTools executable** parameter; either way it is stored in QGIS settings
+and reused. If it is on your `PATH`, or the `wbt_for_qgis` plugin is installed,
+it is found automatically.
 
-## Installing WhiteboxTools and Numba
-
-WhiteboxTools is required. Numba is optional: it speeds up the Flood tool's raster combination step, and the plugin falls back to a pure NumPy implementation automatically if Numba is not installed.
-
-### WhiteboxTools
-
-Download the pre-compiled executable for your platform from the official downloads page (https://www.whiteboxgeo.com/download-whiteboxtools/) or the GitHub releases page (https://github.com/jblindsay/whitebox-tools/releases). You do not need to build it from source.
-
-Once you have the executable, either:
-- put it on your system PATH so the plugin can auto-detect it, or
-- leave it wherever you like and paste the full path into the plugin's "WhiteboxTools executable" parameter the first time you run a SCIMAP tool (the plugin saves this path in QGIS settings and reuses it afterwards).
-
-**Windows**
-1. Download the Windows build (zip) and extract it, e.g. to `C:\WBT\`.
-2. Confirm `whitebox_tools.exe` is present in that folder.
-3. Either add `C:\WBT` to your system PATH, or supply the full path (`C:\WBT\whitebox_tools.exe`) in the plugin.
-
-**macOS**
-1. Download the macOS build (zip) and unzip it.
-2. Make it executable: `chmod +x whitebox_tools`.
-3. Gatekeeper may block the first run since the binary is unsigned. Either allow it via System Settings > Privacy & Security > "Allow Anyway" after the first blocked attempt, or clear the quarantine flag: `xattr -d com.apple.quarantine /path/to/whitebox_tools`.
-4. Move it somewhere on PATH (e.g. `/usr/local/bin/`), or supply the full path in the plugin.
-
-**Linux**
-1. Download the Linux build (zip/tar.gz) and extract it.
-2. Make it executable: `chmod +x whitebox_tools`.
-3. Move it somewhere on PATH (e.g. `~/.local/bin/` or `/usr/local/bin/`), or supply the full path in the plugin.
-
-### Numba
-
-Numba must be installed into the same Python environment that QGIS uses to run Processing scripts, which is often not your system/default Python. To find it, open QGIS's Python Console (Plugins > Python Console) and run:
-```python
-import sys; print(sys.executable)
-```
-Then install Numba using that interpreter.
-
-**Windows**
-Open the OSGeo4W Shell (Start Menu > QGIS > OSGeo4W Shell) and run:
-```
-python -m pip install numba
-```
-
-**macOS**
-Open Terminal and run pip using the Python bundled inside the QGIS app, for example:
-```
-/Applications/QGIS.app/Contents/MacOS/bin/python3 -m pip install numba
-```
-(Confirm the exact path with the `sys.executable` check above, as it can vary by QGIS version/install method.)
-
-**Linux**
-If QGIS was installed via your distro's package manager and uses the system Python:
-```
-python3 -m pip install --user numba
-```
-If QGIS was installed via Flatpak, install inside its sandbox instead:
-```
-flatpak run --command=bash org.qgis.qgis
-pip install --user numba
-```
+Numba is optional. Without it, connectivity falls back to pure NumPy, which is
+correct but noticeably slower on large rasters.
 
 ## Installation
 
-### Option 1: Install from Plugins Menu (recommended for normal use)
-1. In QGIS, go to the 'Plugins' menu and select 'Manage and Install Plugins'
-2. Search for 'SCIMAP Toolkit'
-3. Click 'Install Plugin' and then click 'Close'
-4. Access the tools wither under the Plugins menu, in the processing panel or via the toolbar icons  
+### Install from ZIP (recommended)
 
-### Option 2: Install from the QGIS plugin directory
-1. Download this repo as a zip file.
-2. In QGIS, go to Plugins > Manage and Install Plugins....
-3. Choose Install from ZIP.
-4. Select the plugin ZIP and install.
-5. Enable the plugin if prompted.
+1. Zip the `qgis_plugin` folder so the archive root contains `metadata.txt`,
+   `__init__.py`, `scimap_provider.py` and the `core/`, `algorithms/`, `data/`,
+   `gui/` and `icons/` directories.
+2. **Plugins → Manage and Install Plugins… → Install from ZIP**.
+3. Select the ZIP and install, then enable the plugin if prompted.
 
-## How To Use
+### Install as a development folder
 
-You can run the algorithm from:
-- Toolbar button: Run SCIMAP Standard
-- Plugins menu: SCIMAP > Run SCIMAP Standard
-- Processing Toolbox: SCIMAP > SCIMAP Sediment Diffuse Pollution Risk
+Copy the `qgis_plugin` directory into your QGIS profile plugins directory and
+restart QGIS:
 
-You can also run the standalone network tool from:
-- Processing Toolbox: SCIMAP > SCIMAP Network Index from DEM
+- macOS: `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/`
+- Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
+- Windows: `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
 
-You can run the flood tool from:
-- Toolbar button: Run SCIMAP Flood
-- Plugins menu: SCIMAP > Run SCIMAP Flood
-- Processing Toolbox: SCIMAP > SCIMAP Flood
-
-### Parameters
-
-- Digital Elevation Model (DEM): elevation raster
-- Land Cover Map / Risk Weighting: risk weighting raster
-- Rainfall Map: rainfall raster
-- Stream Initiation Threshold (m2): contributing area threshold for stream extraction (default: 800000)
-- Flow routing is fixed to FD8 (no D-Infinity option).
-- Connectivity is fixed to flow-path trace (Topological Netwet option removed).
-- WhiteboxTools executable (optional): path to `whitebox_tools` binary
-
-Flood tool parameters:
-- Connectivity Raster (pre-computed)
-- Runoff / Land Cover Weights Raster (pre-computed)
-- Rainfall Pattern Rasters: all supplied rasters are used (no Top-N selection)
-- Overland Flow Distance Rasters (pre-computed): one per impact point or scenario; generate these with the Overland Flow Distance to Point tool
-
-If WhiteboxTools path is supplied, the plugin stores it in QGIS settings and reuses it on later runs.
-
-### Outputs
-
-- Network Connectivity Risk (raster)
-- Erosion Risk (raster)
-- In-Channel Risk (raster)
-- Vector Stream Network (vector)
-
-Standalone Network Index tool output:
-- Network Index (raster)
-
-Flood tool outputs:
-- SCIMAP-Flood Mean (raster)
-- SCIMAP-Flood Standard Deviation (raster)
+(Substitute `QGIS4` for a QGIS 4 profile.)
 
 ## Tips
 
-- Choose a stream threshold appropriate for raster resolution. The threshold is area-based and is converted internally to cell count.
-- For very high-resolution DEMs, runtime can be long. Minutes to hours for large catchments (2000 km2 plus)
-- If outputs look sparse or too dense, tune Stream Initiation Threshold first.
+- The stream initiation threshold is area-based and converted internally to a
+  cell count, so pick a value appropriate to your raster resolution. If the
+  stream network looks too sparse or too dense, tune this first.
+- Catchment delineation snaps the pour point to the nearest cell with a large
+  enough contributing area. If it snaps to the wrong tributary, reduce the snap
+  search radius; if it does not snap at all, raise it or lower the minimum
+  contributing area.
+- High-resolution DEMs take a long time. Clip to your area of interest first.
 
 ## Troubleshooting
 
-- WhiteboxTools not found:
-  - Set the WhiteboxTools executable parameter explicitly.
-  - Confirm the file exists and is executable.
-- WhiteboxTools executable appears unselectable in file dialog:
-  - Use the plugin's executable selector with All files and select `whitebox_tools` directly.
-- Processing fails with mismatched raster dimensions:
-  - Reproject/resample inputs so DEM, land cover, and rainfall are aligned.
+- **WhiteboxTools not found** — set the executable in the panel's Settings, or
+  with the per-run parameter. On macOS and Linux the file has no extension, so
+  use the file dialog's *All files* filter to select `whitebox_tools` directly.
+- **Connectivity is very slow** — Numba is not available in your QGIS Python. The
+  run log says which backend is in use.
+- **Flood or Overland Flow Distance rejects the inputs** — those tools require
+  every raster on an identical grid. Warp them to a common grid first.
+- **The panel greys out during a run** — the algorithms drive GDAL and
+  WhiteboxTools directly and so run on the main thread. Progress still updates
+  and Cancel still works.
+
+## Upgrading from 1.x
+
+- `scimap_algorithm.py` still exports every algorithm class, so existing scripts
+  and saved models keep working. New code should import from the `algorithms`
+  and `core` packages.
+- Sediment now reclassifies land cover by default. To keep 1.x behaviour, tick
+  **Land cover is already a risk weighting**.
+- The plugin no longer imports anything from the SCIMAP web application. Earlier
+  versions silently used the web app's connectivity implementation when run from
+  inside the `scimap-app` repository, which could give different results to a
+  distributed ZIP; only the plugin's own implementation is used now.
 
 ## Citation
 
 Reaney, S., Lane, S., Heathwaite, A., and Dugdale, L. (2011).
-Risk-based modelling of diffuse land use impacts from rural landscapes upon salmonid fry abundance. _Ecological Modelling_, 222(4), 1016-1029. https://doi.org/10.1016/j.ecolmodel.2010.08.022
-Reaney, Sim M. (2022) Spatial targeting of nature‐based solutions for flood risk management within river catchments. Journal of Flood Risk Management Volume 15, Issue 3 e12803 https://doi.org/10.1111/jfr3.12803
+Risk-based modelling of diffuse land use impacts from rural landscapes upon
+salmonid fry abundance. *Ecological Modelling*, 222(4), 1016-1029.
+https://doi.org/10.1016/j.ecolmodel.2010.08.022
+
+SCIMAP-Flood: Reaney, S. M. (2022). Spatial targeting of nature-based solutions
+for flood risk management within river catchments.
+*Journal of Flood Risk Management*, e12803.

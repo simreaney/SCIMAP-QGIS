@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="10" fill="#F5F3FF"/>
+
+  <!-- Terrain -->
+  <path d="M6 46L18 38L28 42L40 30L58 40V50H6Z" fill="#7C3AED" opacity="0.14"/>
+
+  <!-- Flow path to point, dashed -->
+  <path d="M8 42C16 34 22 30 30 26C38 22 42 20 46 18" fill="none" stroke="#6D28D9" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1 6"/>
+
+  <!-- Distance ticks along the path -->
+  <circle cx="18" cy="34.5" r="2" fill="#8B5CF6"/>
+  <circle cx="28" cy="27.5" r="2" fill="#8B5CF6"/>
+  <circle cx="38" cy="21.6" r="2" fill="#8B5CF6"/>
+
+  <!-- Origin -->
+  <circle cx="8" cy="42" r="3.4" fill="#5B21B6"/>
+
+  <!-- Target point marker -->
+  <path d="M46 8c-5 0-9 4-9 9c0 6.5 9 15 9 15s9-8.5 9-15c0-5-4-9-9-9z" fill="#6D28D9"/>
+  <circle cx="46" cy="17" r="3.4" fill="#F5F3FF"/>
+</svg>
