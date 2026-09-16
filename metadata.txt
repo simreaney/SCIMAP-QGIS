@@ -7,7 +7,7 @@ qgisMaximumVersion=4.99
 description=SCIMAP tools for catchment delineation, sediment and FIO risk mapping, network index, and flood risk mapping, with a guided panel, land cover risk weighting, and automatic result styling.
 description[de]=SCIMAP-Werkzeuge für Einzugsgebietsabgrenzung, Sediment- und FIO-Risikokartierung, Netzwerkindex und Hochwasserrisikokartierung, mit geführtem Bedienfeld, Landbedeckungs-Risikogewichtung und automatischer Ergebnisdarstellung.
 description[es]=Herramientas SCIMAP para delimitación de cuencas, cartografía de riesgo de sedimentos y FIO, índice de red y riesgo de inundación, con panel guiado, ponderación de riesgo por cobertura del suelo y estilo automático de resultados.
-version=1.5
+version=1.5.1
 author=Sim M. Reaney, Durham University
 email=sim.reaney@durham.ac.uk
 about=Calculates SCIMAP spatial indices including network connectivity, erosion risk, in-channel risk, seasonal FIO delivery risk, and flood mean/stdev outputs using native WhiteboxTools hydrological processing (BreachDepressions, FD8FlowAccumulation, D8Pointer, DInfMassFlux, Watershed, DownslopeDistanceToStream) and a flow-path trace connectivity approach. Tools: SCIMAP Sediment, SCIMAP FIO, Delineate Catchment, Apply Land Cover Risk Weights, Network Index, SCIMAP Flood, Overland Flow Distance to Point, and Export SCIMAP Results. A guided SCIMAP panel mirrors the SCIMAP web application workflow with click-on-map pour points and impact points, an editable risk weight table, and parameter set XML that is interchangeable with the web application. Land cover rasters are reclassified into SCIMAP risk weights in the plugin, so no pre-weighted raster is required. Outputs are styled automatically with percentile-stretched colour ramps and can be exported as GeoPackage, KML, point vectors, or Cloud-Optimised GeoTIFF. Depends upon the WhiteboxTools executable also being installed. https://doi.org/10.1016/j.ecolmodel.2010.08.022
@@ -20,4 +20,5 @@ hasProcessingProvider=yes
 homepage=https://scimap.org.uk
 tags=scimap,hydrology,erosion,diffuse pollution,risk,flood,catchment,watershed,fio,water quality,land cover
 icon=icons/icon.svg
-changelog=1.5 - Added SCIMAP FIO, catchment delineation, land cover risk weighting with parameter set XML, result export tools, automatic colour-ramp styling, a guided SCIMAP panel with click-on-map point picking, cancellable runs, and automatic input grid alignment. Refactored into core/algorithms/gui packages. Fix issue with Whitebox Tools on Windows. 
+changelog=1.5.1 - Added SCIMAP FIO, catchment delineation, land cover risk weighting with parameter set XML, result export tools, automatic colour-ramp styling, a guided SCIMAP panel with click-on-map point picking, cancellable runs, and automatic input grid alignment. Refactored into core/algorithms/gui packages. Fix issue with Whitebox Tools on Windows. 
+

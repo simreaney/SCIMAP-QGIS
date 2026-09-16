@@ -13,9 +13,56 @@ directly into the plugin and vice versa::
     </parameterSet>
 """
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 - only used to build/serialise trusted output XML; untrusted input goes through _fromstring_safe below
+import xml.parsers.expat as expat
 
 from .defaults import CEH_TO_SCIMAP, DEFAULT_WEIGHTS, SCIMAP_CLASSES
+
+try:
+    # Prefer defusedxml when it happens to be present in the QGIS Python
+    # environment, since it is more thoroughly audited than the fallback
+    # parser below. The plugin ships as a self-contained zip with no
+    # dependency installer, so it cannot be a hard requirement.
+    import defusedxml.ElementTree as _safe_ET
+except ImportError:
+    _safe_ET = None
+
+
+class XMLSecurityError(ValueError):
+    """Raised when parameter-set XML contains a disallowed DOCTYPE/entity."""
+
+
+def _reject_doctype(*_args, **_kwargs):
+    raise XMLSecurityError("DOCTYPE declarations are not allowed in parameter set XML")
+
+
+def _fromstring_safe(xml_text):
+    """Parse untrusted XML, guarding against XXE and entity-expansion attacks.
+
+    Falls back to a hardened stdlib parser (DOCTYPE/entity declarations
+    rejected outright) when defusedxml is unavailable, since neither this
+    format nor its use case needs a DOCTYPE. Built directly on
+    ``xml.parsers.expat`` rather than ``ET.XMLParser``, because the
+    C-accelerated ``ET.XMLParser`` does not expose the underlying expat
+    parser needed to install these handlers.
+    """
+    if _safe_ET is not None:
+        return _safe_ET.fromstring(xml_text)
+
+    builder = ET.TreeBuilder()
+    parser = expat.ParserCreate()
+    parser.StartElementHandler = builder.start
+    parser.EndElementHandler = builder.end
+    parser.CharacterDataHandler = builder.data
+    parser.StartDoctypeDeclHandler = _reject_doctype
+    parser.EntityDeclHandler = _reject_doctype
+    parser.UnparsedEntityDeclHandler = _reject_doctype
+    parser.ExternalEntityRefHandler = _reject_doctype
+
+    if isinstance(xml_text, str):
+        xml_text = xml_text.encode("utf-8")
+    parser.Parse(xml_text, True)
+    return builder.close()
 
 
 def export_weights(weights, name="SCIMAP parameter set"):
@@ -43,7 +90,7 @@ def parse_weights(xml_text):
     class the last value wins, matching the web application. Classes absent from
     the file fall back to the SCIMAP defaults so the result is always complete.
     """
-    root = ET.fromstring(xml_text)
+    root = _fromstring_safe(xml_text)
     name = root.findtext("name") or "Imported parameter set"
 
     valid_ids = {class_id for class_id, _ in SCIMAP_CLASSES}
