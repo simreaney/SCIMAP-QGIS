@@ -29,18 +29,11 @@ implementation", *Ecological Modelling*. https://doi.org/10.1016/j.ecolmodel.201
 
 ## Installing the plugin
 
-Install like any other QGIS plugin, either from the QGIS Plugin Repository (if
-published there) or manually:
+Install like any other QGIS plugin, from the QGIS Plugin Repository:
 
 1. Open **Plugins → Manage and Install Plugins…**
-2. Either search for "SCIMAP Toolkit" and install it, or choose **Install from
-   ZIP** and point at the plugin's `.zip` file.
+2. Search for "SCIMAP Toolkit" and install it.
 3. Enable the **SCIMAP Toolkit** checkbox in the plugin list.
-
-> Only install one copy at a time. If an unzipped development copy sits
-> alongside the packaged plugin, QGIS refuses the duplicate Processing provider
-> and the plugin logs a warning in the **Log Messages** panel instead of
-> half-registering.
 
 **Screenshot:**
 ![QGIS Plugin Manager showing SCIMAP Toolkit installed and enabled](screenshots/00-overview/plugin-manager.png)
@@ -57,10 +50,6 @@ Once enabled, SCIMAP adds itself in three places:
 - A **`SCIMAP` provider in the Processing Toolbox**, listing all twelve
   algorithms (including Export SCIMAP Results, which has no toolbar icon), so
   they can be run from there or chained into Processing models.
-
-**Screenshot:**
-![SCIMAP toolbar icons in the QGIS toolbar area](screenshots/00-overview/toolbar.png)
-*The SCIMAP toolbar, undocked or docked, showing all its icons in order.*
 
 **Screenshot:**
 ![Plugins menu showing the SCIMAP submenu](screenshots/00-overview/plugins-menu.png)
