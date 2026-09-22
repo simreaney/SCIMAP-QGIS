@@ -12,6 +12,10 @@ from .algorithms.base import ScimapAlgorithmBase, ScimapCanceled
 from .algorithms.catchment import ScimapCatchmentAlgorithm
 from .algorithms.export import ScimapExportResultsAlgorithm
 from .algorithms.fio import ScimapFioAlgorithm
+from .algorithms.fitted_base import ScimapFittedAlgorithmBase
+from .algorithms.fitted_calibrate import ScimapFittedCalibrateAlgorithm
+from .algorithms.fitted_maps import ScimapFittedMapsAlgorithm
+from .algorithms.fitted_stats import ScimapFittedStatsAlgorithm
 from .algorithms.flood import ScimapFloodAlgorithm
 from .algorithms.network_index import ScimapNetworkIndexAlgorithm
 from .algorithms.overland_flow import ScimapOverlandFlowDistanceAlgorithm
@@ -32,6 +36,10 @@ __all__ = [
     'ScimapRiskAlgorithm',
     'ScimapStandardAlgorithm',
     'ScimapFioAlgorithm',
+    'ScimapFittedAlgorithmBase',
+    'ScimapFittedCalibrateAlgorithm',
+    'ScimapFittedStatsAlgorithm',
+    'ScimapFittedMapsAlgorithm',
     'ScimapNetworkIndexAlgorithm',
     'ScimapFloodAlgorithm',
     'ScimapOverlandFlowDistanceAlgorithm',

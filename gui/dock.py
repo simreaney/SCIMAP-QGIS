@@ -11,6 +11,8 @@ drive GDAL and WhiteboxTools directly, so runs happen on the main thread with
 and the Cancel button live.
 """
 
+import json
+import logging
 import os
 
 import processing
@@ -23,8 +25,8 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.gui import QgsMapLayerComboBox
-from qgis.PyQt.QtCore import QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl
+from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -49,16 +51,19 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from ..core import styling, wbt
+from ..core import dashboard, styling, wbt
 from ..data import params_xml
 from ..data.defaults import (
     COLOUR_RAMPS,
     DEFAULT_WEIGHTS,
+    SCIMAP_CLASS_NAMES,
     SCIMAP_CLASSES,
     default_remap_matrix,
 )
 from ..localization import tr
 from .map_tools import MultiPointPickerMapTool, PointPickerMapTool
+
+logger = logging.getLogger(__name__)
 
 ICONS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'icons')
 
@@ -120,6 +125,10 @@ class ScimapDockWidget(QDockWidget):
         self.feedback = None
         self.results = []
         self.last_result_layers = {}
+        # last_result_layers is replaced on every run; the dashboard needs
+        # everything produced this session, so keep a running tally too.
+        self.session_outputs = {}
+        self.last_run_params = {}
 
         self.pour_point = None
         self.pour_point_tool = PointPickerMapTool(self.canvas)
@@ -412,6 +421,23 @@ class ScimapDockWidget(QDockWidget):
         buttons.addWidget(export)
         layout.addLayout(buttons)
 
+        dashboard_group = QGroupBox(tr('Web dashboard'))
+        dashboard_layout = QVBoxLayout(dashboard_group)
+        dashboard_layout.addWidget(QLabel(tr(
+            'A shareable folder with an interactive map, 3D terrain and the data.')))
+        build_dashboard = QPushButton(tr('Build web dashboard…'))
+        build_dashboard.clicked.connect(self._build_dashboard)
+        dashboard_layout.addWidget(build_dashboard)
+        advanced_dashboard = QPushButton(tr('Open in Processing dialog…'))
+        advanced_dashboard.clicked.connect(
+            lambda: processing.execAlgorithmDialog('scimap:webdashboard'))
+        dashboard_layout.addWidget(advanced_dashboard)
+        self.dashboard_after_run = QCheckBox(tr('Build one after each run'))
+        self.dashboard_after_run.setToolTip(tr(
+            'Asks where to save the dashboard once a run finishes.'))
+        dashboard_layout.addWidget(self.dashboard_after_run)
+        layout.addWidget(dashboard_group)
+
         settings_group = QGroupBox(tr('Settings'))
         settings_form = QFormLayout(settings_group)
         wbt_row = QHBoxLayout()
@@ -578,13 +604,18 @@ class ScimapDockWidget(QDockWidget):
             self.feedback.cancel()
             self.log_message(tr('Cancelling…'))
 
-    def run_algorithm(self, algorithm_id, params, description):
-        """Run a Processing algorithm on the main thread with live feedback."""
+    def run_algorithm(self, algorithm_id, params, description, clear_log=True):
+        """Run a Processing algorithm on the main thread with live feedback.
+
+        *clear_log* is False when one run is chained onto another (building a
+        dashboard straight after a risk run), so the science run's log survives.
+        """
         if self.feedback is not None:
             self._warn(tr('A SCIMAP run is already in progress.'))
             return None
 
-        self.log.clear()
+        if clear_log:
+            self.log.clear()
         self.progress.setValue(0)
         self.cancel_button.setEnabled(True)
         self.log_message(f"▶ {description}")
@@ -609,7 +640,40 @@ class ScimapDockWidget(QDockWidget):
         self.progress.setValue(100)
         self.log_message(tr('✔ Complete.'))
         self.last_result_layers = self._register_results(results)
+        try:
+            self._record_run(algorithm_id, params)
+        except Exception:
+            # Provenance is for the dashboard, not the science. A finished run
+            # whose outputs are already on the canvas must not be reported as a
+            # failure because its bookkeeping tripped.
+            logger.warning('Could not record run provenance', exc_info=True)
+            self.log_message(tr('Could not record run details for the dashboard.'))
+            self.last_run_params = None
         return results
+
+    def _record_run(self, algorithm_id, params):
+        """Remember what produced these results, for the dashboard's provenance.
+
+        Layer objects and full paths are reduced to names: this ends up in a
+        file that gets shared, and a user's directory layout is nobody's business.
+        """
+        readable = {}
+        for key, value in params.items():
+            if value is None:
+                continue
+            if isinstance(value, str) and value in ('TEMPORARY_OUTPUT', ''):
+                continue
+            if hasattr(value, 'name'):
+                readable[key] = value.name()
+            elif isinstance(value, (int, float, bool, str)):
+                readable[key] = os.path.basename(value) if isinstance(value, str) else value
+        # SCIMAP_CLASSES is a list of (id, label) pairs; SCIMAP_CLASS_NAMES is
+        # the dict built from it.
+        self.last_run_params = {
+            'run': {'algorithm': algorithm_id, 'parameters': readable},
+            'weights': {str(k): v for k, v in self.current_weights().items()},
+            'classNames': {str(k): v for k, v in SCIMAP_CLASS_NAMES.items()},
+        }
 
     def _register_results(self, results):
         """Add produced layers to the canvas and the Results tab.
@@ -632,6 +696,7 @@ class ScimapDockWidget(QDockWidget):
             self.results.append(layer.id())
             self.results_list.addItem(f"{name} — {os.path.basename(value)}")
             layers[key] = layer
+        self.session_outputs.update(layers)
         self._refresh_raster_lists()
         return layers
 
@@ -750,7 +815,8 @@ class ScimapDockWidget(QDockWidget):
             })
             description = tr('Running SCIMAP Sediment')
 
-        self.run_algorithm(algorithm_id, params, description)
+        if self.run_algorithm(algorithm_id, params, description):
+            self._maybe_build_dashboard()
 
     def _compute_ofd_from_impacts(self):
         """Turn the clicked impact points into overland flow distance rasters.
@@ -807,14 +873,15 @@ class ScimapDockWidget(QDockWidget):
                 'Select at least one overland flow distance raster, or compute '
                 'them from your impact points.'))
 
-        self.run_algorithm('scimap:scimapflood', {
+        if self.run_algorithm('scimap:scimapflood', {
             'INPUT_CONNECTIVITY': connectivity,
             'INPUT_RUNOFF': runoff,
             'INPUT_RAINFALL_MAPS': rainfall,
             'INPUT_OFD_MAPS': ofd,
             'OUT_MEAN': 'TEMPORARY_OUTPUT',
             'OUT_STDEV': 'TEMPORARY_OUTPUT',
-        }, tr('Running SCIMAP Flood'))
+        }, tr('Running SCIMAP Flood')):
+            self._maybe_build_dashboard()
 
     # ── Results tab actions ─────────────────────────────────────────────
 
@@ -823,6 +890,87 @@ class ScimapDockWidget(QDockWidget):
         if row < 0 or row >= len(self.results):
             return None
         return QgsProject.instance().mapLayer(self.results[row])
+
+    # ── Web dashboard ───────────────────────────────────────────────────
+
+    #: Output keys the risk tools produce -> dashboard algorithm inputs.
+    #: The dashboard's "In-channel risk" raster slot has no entry here on
+    #: purpose: this plugin delivers in-channel risk as the instream vector
+    #: (OUT_VECTOR_STREAM), not a raster. That slot is for a scimap_output.tif
+    #: from elsewhere, supplied through the Processing dialog.
+    DASHBOARD_SLOTS = {
+        'OUT_EROSION': 'INPUT_EROSION',
+        'OUT_CONNECTIVITY': 'INPUT_CONNECTIVITY',
+        'OUT_NETWORK_INDEX': 'INPUT_NETWORK_INDEX',
+        'OUT_MEAN': 'INPUT_FLOOD_MEAN',
+        'OUT_STDEV': 'INPUT_FLOOD_STDEV',
+        'OUT_WEIGHTS': 'INPUT_LANDCOVER',
+        'OUT_VECTOR_STREAM': 'INPUT_STREAMS',
+        'OUT_STREAM_RISK_POINTS': 'INPUT_POINTS',
+        'OUT_CATCHMENT': 'INPUT_CATCHMENT',
+    }
+
+    def _build_dashboard(self, folder=None):
+        """Export everything produced this session as a web dashboard."""
+        if not self.session_outputs:
+            return self._warn(tr('Run a SCIMAP tool first, then build a dashboard from it.'))
+
+        params = {}
+        for key, target in self.DASHBOARD_SLOTS.items():
+            layer = self.session_outputs.get(key)
+            if layer is not None:
+                params[target] = layer
+
+        dem = self.run_dem.currentLayer() or self.catchment_dem.currentLayer()
+        if dem is not None:
+            params['INPUT_DEM'] = dem
+
+        title = tr('SCIMAP results')
+        catchment = self.session_outputs.get('OUT_CATCHMENT')
+        if catchment is not None:
+            title = catchment.name()
+
+        if not folder:
+            # The user picks where to put it; the dashboard gets a dated folder
+            # of its own in there. It is hundreds of files plus a sibling zip,
+            # so writing it loose into somewhere like Documents would be a mess.
+            parent = QFileDialog.getExistingDirectory(
+                self, tr('Choose where to save the dashboard'))
+            if not parent:
+                return None
+            folder = dashboard.unique_folder(parent, title)
+            self.log_message(tr('Saving the dashboard to {path}').format(path=folder))
+
+        params.update({
+            'TITLE': title,
+            'SUBTITLE': '',
+            'ORGANISATION': '',
+            'RUN_METADATA': json.dumps(self.last_run_params) if self.last_run_params else '',
+            'OUTPUT_FOLDER': folder,
+        })
+
+        results = self.run_algorithm(
+            'scimap:webdashboard', params, tr('Building web dashboard'), clear_log=False)
+        if not results:
+            return None
+
+        index = results.get('INDEX_HTML')
+        if index and os.path.exists(index):
+            self.log_message(tr('Opening the dashboard in your browser…'))
+            QDesktopServices.openUrl(QUrl.fromLocalFile(index))
+        return results
+
+    def _maybe_build_dashboard(self):
+        """Chain a dashboard onto a finished run, if the user asked for one.
+
+        Called *after* run_algorithm returns, never from inside it: the panel
+        refuses to start a second run while one is in flight.
+        """
+        if not self.dashboard_after_run.isChecked():
+            return
+        if not self.session_outputs:
+            return
+        self._build_dashboard()
 
     def _apply_ramp_to_selection(self):
         layer = self._selected_result_layer()

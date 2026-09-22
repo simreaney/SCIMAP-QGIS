@@ -6,7 +6,11 @@ without Numba installed — it is simply slower on large catchments.
 
 try:
     from numba import njit, prange
-except ModuleNotFoundError:  # pragma: no cover - depends on the QGIS install
+except Exception:  # pragma: no cover - depends on the QGIS install
+    # Deliberately broader than ModuleNotFoundError. Numba can be present but
+    # unloadable -- a mismatched or unsigned llvmlite raises OSError on import,
+    # for instance -- and an optional accelerator must never be able to stop
+    # the whole plugin loading when a correct fallback is right here.
     njit = None
     prange = range
 

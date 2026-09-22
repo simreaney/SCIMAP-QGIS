@@ -20,12 +20,81 @@ no server, so the plugin works anywhere in the world.
 | **SCIMAP Flood** | Flood risk mean/stdev from pre-computed connectivity, runoff, rainfall and overland flow distance rasters |
 | **Overland Flow Distance to Point** | Downslope flow-path distance to the nearest target point |
 | **Export SCIMAP Results** | GeoPackage, KML, point vector and Cloud-Optimised GeoTIFF exports |
+| **Create Web Dashboard** | A shareable, offline web page of the results: zoomable 2D map, 3D terrain, charts and data downloads |
+| **SCIMAP Fitted 1: Catchment Statistics** | Catchments upstream of each monitoring site, summarised per land cover class |
+| **SCIMAP Fitted 2: Calibrate Weights** | Infers land cover risk weights from observed water quality, with cross-validation |
+| **SCIMAP Fitted 3: Ensemble Risk Maps** | Propagates the calibrated weight sets into risk maps that carry their own uncertainty |
 
 Hydrology runs through native WhiteboxTools calls — `BreachDepressions`,
 `Slope`, `FD8FlowAccumulation`, `D8FlowAccumulation`, `D8Pointer`,
 `ExtractStreams`, `RasterStreamsToVector`, `Watershed`, `DInfMassFlux`,
 `DownslopeDistanceToStream` — with no GRASS or SAGA dependency. Connectivity and
 the SCIMAP indices are pure NumPy, optionally accelerated by Numba.
+
+## SCIMAP Fitted
+
+Standard SCIMAP takes its land cover risk weights as an *assumption*. SCIMAP
+Fitted *infers* them from observed water quality, which is worth doing whenever
+you have monitoring data for the catchment and no strong prior on what the
+weights should be.
+
+The idea is simple. Delineate the catchment upstream of every monitoring site.
+Inside each one, measure how much of each land cover class there is and how
+connected and erodible that ground is. Then search for the set of class weights
+whose predicted risk ranks the sites in the same order the observations do.
+
+Run the three tools in order.
+
+**1. Catchment Statistics** takes a DEM, a land cover raster, rainfall and a
+point layer of monitoring sites, and writes one row per site per land cover
+class: the class area, the mean of connectivity × erosion, and a per-site
+dilution factor (the rainfall-weighted contributing area at the outlet, standing
+in for discharge). Observed values can travel in attribute fields of the point
+layer.
+
+**2. Calibrate Weights** draws thousands of candidate weight vectors by Latin
+hypercube and scores each by Spearman rank correlation against the observations.
+It writes every set's metrics, the best-fitting sets, diagnostic plots, and a
+parameter set XML that loads straight into **Apply Land Cover Risk Weights** or
+**SCIMAP Sediment**. It reads its input from step 1, or from an
+`all_catchments_class_means_summary.csv` produced by the SCIMAP-Fitted research
+scripts.
+
+**3. Ensemble Risk Maps** propagates the best weight sets back onto the grid,
+producing mean/standard deviation and median/IQR rasters plus two "no regrets"
+maps showing, per cell, the percentage of weight sets that put it in their top
+tier. Those last two are the ones to target work from: a cell scoring high is
+worth acting on whichever calibration turns out to be right.
+
+### Three things worth knowing
+
+**Only the ratios between weights are identifiable.** Multiplying every weight
+by the same number leaves the rank correlation unchanged, and SCIMAP Standard's
+own percentile stretch removes it again downstream, so the absolute numbers
+carry no information. Reported weights are rescaled so the largest is 1. Without
+that the top-N boxplots would mostly show the spread of an arbitrary scale
+rather than real uncertainty.
+
+**Read the dotty plot before trusting a weight.** A class whose points form a
+clear ridge is constrained by the data. A class whose points are a flat band is
+not, however tight its box looks.
+
+**Cross-validate if you can.** With seven classes and thirty sites there are
+roughly four observations per free parameter, which is few enough that a high
+correlation can be an artefact of searching a large space. Cross-validation
+refits on all but *k* sites and predicts those held out; if that score is much
+lower than the calibration score, the fit is not real. It is off by default
+because its cost grows sharply with *k* — leave-one-out over thirty sites is
+seconds, leave-five-out is hours.
+
+### Choose the land cover scheme explicitly
+
+UKCEH changed its target class list at LCM2015. In the 21-class scheme classes
+20 and 21 are Urban and Suburban; in the older 23-class scheme they are Littoral
+sediment and Saltmarsh. Reading a 2015-or-later raster with the older table
+therefore maps every urban cell to SCIMAP class 7 (Other) without warning,
+because those IDs exist in both tables. The Fitted tools ask which scheme you
+are using and default to the modern one.
 
 ## The SCIMAP panel
 
@@ -126,6 +195,68 @@ parameter, or switch ramps after the fact in the panel's Results tab.
 | Network Index | Network index raster |
 | SCIMAP Flood | Flood mean and standard deviation rasters |
 | Overland Flow Distance | Travel-distance raster |
+| Create Web Dashboard | A folder containing `index.html`, map tiles, data and downloads; optionally a zip of the lot |
+
+## Web dashboard
+
+**Create Web Dashboard** turns a finished run into a folder you can hand to
+anyone. Open `index.html` by double-clicking it: there is no web server to
+start, no internet connection needed and no GIS software required.
+
+It gives you:
+
+- a **2D map** over shaded relief generated from your own DEM, with the result
+  layers as zoomable tiles, per-layer opacity, and the stream network coloured
+  by in-channel risk;
+- a choice of **background map** — the shaded relief, Esri Street Map, Esri
+  Dark Gray or Esri Satellite. The relief is built into the folder and is what
+  the dashboard opens with, so the map still works with no connection; the
+  three Esri basemaps are fetched live and are there for context when the
+  viewer is online. Turn them off with *Offer online basemaps* if the dashboard
+  is for somewhere without internet access, or if you would rather it made no
+  network requests;
+- a **3D terrain view** with the selected result draped over the DEM, the
+  stream network lifted onto the surface, water animated downstream and
+  coloured by the in-channel risk of the reach it runs along, an optional slow
+  automatic orbit, and controls for vertical exaggeration and sun position;
+- **hover anywhere** to read every layer's value, the elevation and the
+  coordinates; click a reach for its risk, rank and length;
+- **charts**: the distribution of each layer; a risk-concentration curve over
+  the whole catchment that answers "how much of the land produces how much of
+  the risk?" — with the highest-risk 1/5/10/25/50% of the ground against the
+  risk it carries, and the area you would have to treat to capture 50/80/95% of
+  the risk; the wetness-connectivity curve; and a ranked table of priority
+  reaches that zoom the map when you pick one;
+- **map images**: save the 2D view as a PNG at screen (1600 px) or print
+  (4000 px) size, with a scale bar, drawn from the embedded data with whatever
+  layers, opacities and stream colours you have set;
+- **3D model export**: save the catchment as `.glb` (keeps the draped colours,
+  opens in Blender or any glTF viewer), `.stl` or `.obj`. Every format is a
+  closed, watertight solid — surface, sides and a flat base — so it can be
+  3D printed without repairing the mesh first. Set the printed size with the
+  slider (200 mm by default); the model is scaled to fit that box, centred and
+  standing on zero, and the panel shows the finished dimensions and the map
+  scale. STL and OBJ come out in millimetres, glTF in metres, each being the
+  unit those formats are read in;
+- **downloads**: your full-resolution results in their original projection,
+  plus `provenance.json` and SHA-256 checksums;
+- **provenance**: the parameters, risk weights, input layers, CRS and software
+  versions behind the run;
+- **Print / Save as PDF**, which lays the whole thing out as a report.
+
+Build one from the **Results** tab of the SCIMAP panel, from the Processing
+toolbox, or automatically after every run by ticking *Build one after each run*.
+
+Two settings control size. *Detail of the embedded data* (default 1024 px) sets
+the resolution of the values behind the 3D view, the hover readout and the
+charts. Map tiles are written up to the resolution of your own data and no
+further — zooming past that stretches the last level rather than storing an
+upscale of pixels the analysis never resolved. A typical 5 m catchment produces
+a few hundred tiles per layer.
+
+The dashboard carries its own copies of Leaflet and three.js, so it will still
+work years from now with no network. The 3D view needs WebGL; everything else
+works without it.
 
 ## Requirements
 
@@ -140,6 +271,9 @@ it is found automatically.
 
 Numba is optional. Without it, connectivity falls back to pure NumPy, which is
 correct but noticeably slower on large rasters.
+
+The web dashboard needs nothing beyond NumPy and GDAL, both of which ship with
+QGIS. It does not use matplotlib.
 
 ## Installation
 

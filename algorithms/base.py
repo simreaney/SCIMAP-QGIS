@@ -41,7 +41,7 @@ class HydrologyResult:
 
     __slots__ = (
         'dem_fill_path', 'slope_path', 'accum_path', 'd8_path', 'stream_path',
-        'stream_vector_path',
+        'stream_vector_path', 'd8_accum_path',
         'slope_ds', 'slope_arr', 'accum_arr', 'd8_arr',
         'dem_fill_arr', 'mask_arr', 'channel_mask', 'cell_area',
     )
@@ -171,8 +171,8 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
     def compute_erosion_risk(self, accum_array, slope_deg, cell_area, use_stream_power=True):
         return compute_erosion_risk(accum_array, slope_deg, cell_area, use_stream_power)
 
-    def normalise_percentile(self, array, p_low=5, p_high=95):
-        return normalise_percentile(array, p_low, p_high)
+    def normalise_percentile(self, array, p_low=5, p_high=95, max_samples=None):
+        return normalise_percentile(array, p_low, p_high, max_samples)
 
     def compute_twi(self, accum_array, slope_array, rainfall_scaled_array):
         return compute_twi(accum_array, slope_array, rainfall_scaled_array)
@@ -359,6 +359,7 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
             d8_path=d8_path,
             stream_path=stream_path,
             stream_vector_path=stream_vector_path,
+            d8_accum_path=d8_accum_path,
             slope_ds=slope_ds,
             slope_arr=slope_arr,
             accum_arr=accum_arr,
@@ -475,21 +476,41 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
         return risk_concentration, channel_risk_concentration
 
     def _route_mass_flux(self, hydro, loading, label, feedback):
-        """Route an area-weighted loading downslope with WhiteboxTools DInfMassFlux.
+        """Backwards-compatible wrapper around :meth:`route_mass_flux`."""
+        array, _path = self.route_mass_flux(hydro, loading, label, feedback)
+        return array
 
-        Ported from ``processing/scimap_standard.py``. Returns ``None`` if the
-        routing fails, so the caller can fall back to local scaling exactly as
-        the web application does.
+    def route_mass_flux(self, hydro, loading, label, feedback,
+                        tool='DInfMassFlux', out_path=None, slug=None):
+        """Route an area-weighted loading downslope with WhiteboxTools.
+
+        Ported from ``processing/scimap_standard.py``. Returns
+        ``(array, out_path)``, with ``array`` ``None`` if the routing fails so
+        the caller can fall back to local scaling exactly as the web
+        application does.
+
+        *tool* is ``'DInfMassFlux'`` (the SCIMAP default, and what every other
+        tool here uses) or ``'D8MassFlux'``, which the SCIMAP-Fitted research
+        scripts use. Mixing the two within one ratio is a mistake: D8
+        concentrates flow into single-cell threads while D-infinity disperses
+        it, so a numerator and denominator routed by different tools differ by
+        a systematic hillslope artefact that is pure numerical mismatch.
+
+        *out_path* and *slug* let a caller that routes many loadings — the
+        SCIMAP-Fitted ensemble stage routes one per land-cover class — keep
+        their intermediates apart. The default derives the filename from
+        *label*, which is fine for a single call but collides across a loop.
         """
         tmpdir = os.path.dirname(hydro.dem_fill_path)
-        slug = label.split()[0].lower()
+        slug = slug or label.split()[0].lower()
         loading_path = os.path.join(tmpdir, f"{slug}_loading.tif")
         eff_path = os.path.join(tmpdir, "efficiency_ones.tif")
         abs_path = os.path.join(tmpdir, "absorption_zero.tif")
-        out_path = os.path.join(tmpdir, f"{slug}_routed_accum.tif")
+        if out_path is None:
+            out_path = os.path.join(tmpdir, f"{slug}_routed_accum.tif")
 
         try:
-            feedback.pushInfo(f"Routing {label} downslope (DInfMassFlux)...")
+            feedback.pushInfo(f"Routing {label} downslope ({tool})...")
             self.save_raster(loading, loading_path, hydro.slope_ds,
                              gdal.GDT_Float32, wbt_compatible=True)
             if not os.path.exists(eff_path):
@@ -498,7 +519,7 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
                 self.save_raster(np.zeros_like(loading), abs_path, hydro.slope_ds,
                                  gdal.GDT_Float32, wbt_compatible=True)
 
-            self.run_wbt("DInfMassFlux", {
+            self.run_wbt(tool, {
                 'dem': hydro.dem_fill_path,
                 'loading': loading_path,
                 'efficiency': eff_path,
@@ -508,9 +529,9 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
 
             ds = gdal.Open(out_path)
             if ds is None:
-                raise RuntimeError("DInfMassFlux produced no output")
+                raise RuntimeError(f"{tool} produced no output")
             band = ds.GetRasterBand(1)
-            # DInfMassFlux was fed float32 loading/efficiency/absorption
+            # The mass-flux tool was fed float32 loading/efficiency/absorption
             # rasters above and this result is only ever combined with other
             # float32 arrays, so read it back at the same precision instead
             # of doubling its footprint for no benefit.
@@ -519,14 +540,14 @@ class ScimapAlgorithmBase(QgsProcessingAlgorithm):
             ds = None
             if nodata is not None:
                 arr = np.where(arr == nodata, np.nan, arr)
-            return np.where(hydro.mask_arr, arr, np.nan)
+            return np.where(hydro.mask_arr, arr, np.nan), out_path
         except Exception as exc:
             feedback.pushWarning(
                 f"Mass-flux routing of {label} failed ({exc}); "
                 "using local scaling fallback."
             )
-            logger.warning("DInfMassFlux routing failed for %s", label, exc_info=True)
-            return None
+            logger.warning("%s routing failed for %s", tool, label, exc_info=True)
+            return None, out_path
 
 
 class ScimapCanceled(RuntimeError):

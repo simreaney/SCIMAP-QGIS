@@ -10,8 +10,205 @@ from qgis.PyQt.QtCore import QLocale, QSettings
 
 
 _TRANSLATIONS = {
+    # ── Web dashboard ───────────────────────────────────────────────────
+    "Create Web Dashboard": {
+        "de": "Web-Dashboard erstellen",
+        "es": "Crear panel web",
+    },
+    "Web dashboard": {
+        "de": "Web-Dashboard",
+        "es": "Panel web",
+    },
+    "Build web dashboard…": {
+        "de": "Web-Dashboard erstellen…",
+        "es": "Crear panel web…",
+    },
+    "Build one after each run": {
+        "de": "Nach jedem Lauf eines erstellen",
+        "es": "Crear uno tras cada ejecución",
+    },
+    "Asks where to save the dashboard once a run finishes.": {
+        "de": "Fragt nach dem Speicherort, sobald ein Lauf abgeschlossen ist.",
+        "es": "Pregunta dónde guardar el panel cuando termine la ejecución.",
+    },
+    "A shareable folder with an interactive map, 3D terrain and the data.": {
+        "de": "Ein teilbarer Ordner mit interaktiver Karte, 3D-Gelände und den Daten.",
+        "es": "Una carpeta compartible con mapa interactivo, terreno 3D y los datos.",
+    },
+    "Building web dashboard": {
+        "de": "Web-Dashboard wird erstellt",
+        "es": "Creando el panel web",
+    },
+    "Choose where to save the dashboard": {
+        "de": "Speicherort für das Dashboard wählen",
+        "es": "Elija dónde guardar el panel",
+    },
+    "Saving the dashboard to {path}": {
+        "de": "Dashboard wird gespeichert unter {path}",
+        "es": "Guardando el panel en {path}",
+    },
+    "Choose a folder for the dashboard": {
+        "de": "Ordner für das Dashboard wählen",
+        "es": "Elija una carpeta para el panel",
+    },
+    "Run a SCIMAP tool first, then build a dashboard from it.": {
+        "de": "Führen Sie zuerst ein SCIMAP-Werkzeug aus und erstellen Sie dann ein Dashboard.",
+        "es": "Ejecute primero una herramienta SCIMAP y después cree el panel.",
+    },
+    "Opening the dashboard in your browser…": {
+        "de": "Dashboard wird im Browser geöffnet…",
+        "es": "Abriendo el panel en su navegador…",
+    },
+    "Could not record run details for the dashboard.": {
+        "de": "Die Laufdetails für das Dashboard konnten nicht erfasst werden.",
+        "es": "No se pudieron registrar los detalles de la ejecución para el panel.",
+    },
+    "SCIMAP results": {
+        "de": "SCIMAP-Ergebnisse",
+        "es": "Resultados SCIMAP",
+    },
+    "Dashboard folder": {
+        "de": "Dashboard-Ordner",
+        "es": "Carpeta del panel",
+    },
+    "Dashboard home page": {
+        "de": "Dashboard-Startseite",
+        "es": "Página principal del panel",
+    },
+    "Dashboard title": {
+        "de": "Dashboard-Titel",
+        "es": "Título del panel",
+    },
+    "Subtitle": {"de": "Untertitel", "es": "Subtítulo"},
+    "Organisation": {"de": "Organisation", "es": "Organización"},
+    "Digital elevation model (for relief and 3D terrain)": {
+        "de": "Digitales Geländemodell (für Relief und 3D-Gelände)",
+        "es": "Modelo digital de elevaciones (para relieve y terreno 3D)",
+    },
+    "In-channel risk": {
+        "de": "Risiko im Gewässer",
+        "es": "Riesgo en el cauce",
+    },
+    "Erosion risk": {"de": "Erosionsrisiko", "es": "Riesgo de erosión"},
+    "Network connectivity": {
+        "de": "Netzwerkkonnektivität",
+        "es": "Conectividad de la red",
+    },
+    "Network index": {"de": "Netzwerkindex", "es": "Índice de red"},
+    "Flood risk (mean)": {
+        "de": "Hochwasserrisiko (Mittelwert)",
+        "es": "Riesgo de inundación (media)",
+    },
+    "Flood risk (variability)": {
+        "de": "Hochwasserrisiko (Variabilität)",
+        "es": "Riesgo de inundación (variabilidad)",
+    },
+    "Land cover risk weighting": {
+        "de": "Risikogewichtung der Landbedeckung",
+        "es": "Ponderación de riesgo por cobertura del suelo",
+    },
+    "Additional raster layers": {
+        "de": "Weitere Rasterebenen",
+        "es": "Capas ráster adicionales",
+    },
+    "Stream network (with a Risk field)": {
+        "de": "Gewässernetz (mit Feld „Risk“)",
+        "es": "Red fluvial (con campo «Risk»)",
+    },
+    "Stream network (in-channel risk)": {
+        "de": "Gewässernetz (Risiko im Gewässer)",
+        "es": "Red fluvial (riesgo en el cauce)",
+    },
+    "Catchment boundary": {
+        "de": "Einzugsgebietsgrenze",
+        "es": "Límite de la cuenca",
+    },
+    "Stream risk points": {
+        "de": "Risikopunkte im Gewässer",
+        "es": "Puntos de riesgo en el cauce",
+    },
+    "Wetness-connectivity curve dataset (CSV)": {
+        "de": "Datensatz der Feuchte-Konnektivitäts-Kurve (CSV)",
+        "es": "Conjunto de datos de la curva humedad-conectividad (CSV)",
+    },
+    "Detail of the embedded data": {
+        "de": "Detailgrad der eingebetteten Daten",
+        "es": "Detalle de los datos incrustados",
+    },
+    "Detail of the 3D terrain mesh": {
+        "de": "Detailgrad des 3D-Geländemodells",
+        "es": "Detalle de la malla del terreno 3D",
+    },
+    "Maximum map zoom level; 0 matches the data resolution": {
+        "de": "Maximale Zoomstufe; 0 entspricht der Datenauflösung",
+        "es": "Zoom máximo del mapa; 0 corresponde a la resolución de los datos",
+    },
+    "Initial vertical exaggeration in the 3D view": {
+        "de": "Anfängliche Höhenüberhöhung in der 3D-Ansicht",
+        "es": "Exageración vertical inicial en la vista 3D",
+    },
+    "Include the 3D terrain view": {
+        "de": "3D-Geländeansicht einschließen",
+        "es": "Incluir la vista de terreno 3D",
+    },
+    "Include map tiles (needed for the 2D map)": {
+        "de": "Kartenkacheln einschließen (für die 2D-Karte erforderlich)",
+        "es": "Incluir teselas de mapa (necesarias para el mapa 2D)",
+    },
+    "Include the source data for download": {
+        "de": "Quelldaten zum Herunterladen einschließen",
+        "es": "Incluir los datos de origen para descargar",
+    },
+    "Offer online basemaps when the viewer has an internet connection": {
+        "de": "Online-Hintergrundkarten anbieten, wenn eine Internetverbindung besteht",
+        "es": "Ofrecer mapas base en línea cuando haya conexión a internet",
+    },
+    "Also write a zip of the whole dashboard": {
+        "de": "Zusätzlich ein ZIP des gesamten Dashboards schreiben",
+        "es": "Escribir también un zip del panel completo",
+    },
+    "Run metadata (JSON)": {
+        "de": "Lauf-Metadaten (JSON)",
+        "es": "Metadatos de la ejecución (JSON)",
+    },
+    "Set the \"Dashboard folder\" parameter at the bottom of this dialog: "
+    "click the … button and choose Save to Directory, or type a path. "
+    "The dashboard is written into that folder.": {
+        "de": "Legen Sie unten im Dialog den Parameter „Dashboard-Ordner“ fest: "
+              "Klicken Sie auf … und wählen Sie „In Verzeichnis speichern“, oder geben Sie "
+              "einen Pfad ein. Das Dashboard wird in diesen Ordner geschrieben.",
+        "es": "Defina el parámetro «Carpeta del panel» al final de este diálogo: "
+              "pulse el botón … y elija «Guardar en directorio», o escriba una ruta. "
+              "El panel se escribe en esa carpeta.",
+    },
+    "Choose at least one result layer, or a DEM, to put on the dashboard.": {
+        "de": "Wählen Sie mindestens eine Ergebnisebene oder ein DGM für das Dashboard.",
+        "es": "Elija al menos una capa de resultados, o un MDE, para el panel.",
+    },
+    "Open index.html in the dashboard folder to view the results.": {
+        "de": "Öffnen Sie index.html im Dashboard-Ordner, um die Ergebnisse zu sehen.",
+        "es": "Abra index.html en la carpeta del panel para ver los resultados.",
+    },
+    "Publishing {n} raster layers.": {
+        "de": "{n} Rasterebenen werden veröffentlicht.",
+        "es": "Publicando {n} capas ráster.",
+    },
     # ── Provider, tools and groups ──────────────────────────────────────
     "SCIMAP": {"de": "SCIMAP", "es": "SCIMAP"},
+    "Another copy of the SCIMAP Toolkit is already loaded, so this one "
+    "has not registered its Processing algorithms. Open "
+    "Plugins > Manage and Install Plugins and disable or uninstall the "
+    "duplicate, then restart QGIS.": {
+        "de": "Eine weitere Kopie des SCIMAP Toolkits ist bereits geladen, "
+              "daher hat diese ihre Verarbeitungsalgorithmen nicht registriert. "
+              "Öffnen Sie Erweiterungen > Erweiterungen verwalten und "
+              "installieren und deaktivieren oder deinstallieren Sie die "
+              "Kopie, und starten Sie QGIS neu.",
+        "es": "Ya hay otra copia del SCIMAP Toolkit cargada, por lo que esta no "
+              "ha registrado sus algoritmos de procesamiento. Abra "
+              "Complementos > Administrar e instalar complementos y desactive o "
+              "desinstale la copia duplicada, y reinicie QGIS.",
+    },
     "SCIMAP Panel": {
         "de": "SCIMAP-Bedienfeld",
         "es": "Panel SCIMAP",

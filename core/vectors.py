@@ -177,6 +177,139 @@ def snap_pour_point_to_max_accumulation(accum_path, x, y, search_radius,
     return float(snapped_x), float(snapped_y), float(accum[abs_row, abs_col])
 
 
+def cell_centre(geotransform, row, col):
+    """Map coordinates of the centre of cell (*row*, *col*)."""
+    gt = geotransform
+    x = gt[0] + (col + 0.5) * gt[1] + (row + 0.5) * gt[2]
+    y = gt[3] + (col + 0.5) * gt[4] + (row + 0.5) * gt[5]
+    return float(x), float(y)
+
+
+def cell_of(geotransform, x, y, shape=None):
+    """Row/column containing the map coordinate (*x*, *y*).
+
+    Matches the convention in :func:`create_pour_point_raster`. When *shape* is
+    given the result is clamped into the grid.
+    """
+    gt = geotransform
+    col = int((x - gt[0]) / gt[1])
+    row = int((y - gt[3]) / gt[5])
+    if shape is not None:
+        rows, cols = shape
+        col = max(0, min(col, cols - 1))
+        row = max(0, min(row, rows - 1))
+    return row, col
+
+
+def snap_points_to_stream_cells(stream_arr, geotransform, points,
+                                max_distance_cells=150):
+    """Snap each observation point to its nearest *unoccupied* stream cell.
+
+    Ported from ``SCIMAP-Fitted-Step1.py``. Takes arrays rather than paths so it
+    can be exercised without GDAL.
+
+    *stream_arr* is a stream-network raster (non-zero where there is a channel)
+    and *points* an iterable of ``(x, y)`` in the raster's own CRS. Returns one
+    dict per point, in input order:
+
+        {'row', 'col', 'x', 'y', 'distance_cells', 'fallback', 'moved_cells'}
+
+    Two properties matter and are the reason this exists alongside
+    :func:`snap_pour_point_to_max_accumulation`:
+
+    * **Occupancy.** No two points are ever snapped to the same cell. Without
+      that, two monitoring sites a few cells apart on one reach both land on the
+      same cell and produce two *identical* upstream catchments — two identical
+      rows in the calibration design matrix, which silently inflates the
+      correlation being maximised. There is nothing downstream that can detect
+      this, so it has to be prevented here.
+    * **Nearest, not largest.** Sites in a curated monitoring network are already
+      in-channel; the goal is to land on the modelled channel closest to where
+      the sample was actually taken, not on the biggest river nearby.
+
+    Points are processed in input order, so an earlier point wins a contested
+    cell. When every candidate within *max_distance_cells* is taken (or there
+    are none), the search falls back to the globally nearest free stream cell
+    and flags the result, because a silent no-op would leave the point off the
+    network entirely and produce an empty catchment.
+    """
+    stream = np.asarray(stream_arr)
+    if stream.ndim != 2:
+        raise ValueError("stream_arr must be a 2-D array")
+
+    channel = np.isfinite(stream) & (stream > 0)
+    all_rows, all_cols = np.nonzero(channel)
+    if all_rows.size == 0:
+        raise ValueError(
+            "The stream raster contains no channel cells, so observation points "
+            "cannot be snapped. Lower the stream initiation threshold."
+        )
+
+    height, width = stream.shape
+    radius = max(0, int(max_distance_cells))
+    occupied = set()
+    results = []
+
+    for x, y in points:
+        row, col = cell_of(geotransform, x, y, shape=stream.shape)
+
+        r0 = max(0, row - radius)
+        r1 = min(height, row + radius + 1)
+        c0 = max(0, col - radius)
+        c1 = min(width, col + radius + 1)
+
+        window = channel[r0:r1, c0:c1]
+        win_rows, win_cols = np.nonzero(window)
+        chosen = None
+        fallback = False
+
+        if win_rows.size:
+            cand_rows = win_rows + r0
+            cand_cols = win_cols + c0
+            dist2 = (cand_rows - row) ** 2 + (cand_cols - col) ** 2
+            for idx in np.argsort(dist2, kind='stable'):
+                candidate = (int(cand_rows[idx]), int(cand_cols[idx]))
+                if candidate in occupied:
+                    continue
+                chosen = candidate
+                break
+
+        if chosen is None:
+            # Deliberately ignores max_distance_cells: a point with no free
+            # cell nearby still has to go somewhere on the network, and the
+            # caller is told via the 'fallback' flag so it can warn.
+            fallback = True
+            global_dist2 = (all_rows - row) ** 2 + (all_cols - col) ** 2
+            for idx in np.argsort(global_dist2, kind='stable'):
+                candidate = (int(all_rows[idx]), int(all_cols[idx]))
+                if candidate in occupied:
+                    continue
+                chosen = candidate
+                break
+
+        if chosen is None:
+            raise ValueError(
+                f"There are more observation points ({len(results) + 1}) than "
+                f"stream cells ({all_rows.size}); every cell is already taken."
+            )
+
+        occupied.add(chosen)
+        snapped_row, snapped_col = chosen
+        snapped_x, snapped_y = cell_centre(geotransform, snapped_row, snapped_col)
+        moved = float(np.hypot(snapped_row - row, snapped_col - col))
+        results.append({
+            'row': snapped_row,
+            'col': snapped_col,
+            'x': snapped_x,
+            'y': snapped_y,
+            'distance_cells': moved,
+            'moved_cells': moved,
+            'fallback': fallback,
+        })
+
+    return results
+
+
 # ── Vectorisation ──────────────────────────────────────────────────────
 
 def vectorize_basin(basin_path, output_path, min_area=0.0, output_format="GPKG",
@@ -218,7 +351,8 @@ def vectorize_basin(basin_path, output_path, min_area=0.0, output_format="GPKG",
     if projection:
         srs.ImportFromWkt(projection)
 
-    vec_drv = ogr.GetDriverByName("Memory")
+    # "MEM", not the deprecated "Memory" (GDAL 3.11+).
+    vec_drv = ogr.GetDriverByName("MEM")
     vec_ds = vec_drv.CreateDataSource('polygonised')
     vec_layer = vec_ds.CreateLayer('parts', srs=srs, geom_type=ogr.wkbPolygon)
     vec_layer.CreateField(ogr.FieldDefn("value", ogr.OFTInteger))
@@ -269,6 +403,125 @@ def write_point_vector(x, y, output_path, srs_wkt, attributes=None,
     point.AddPoint(float(x), float(y))
     _write_single_geometry(
         output_path, point, srs, output_format, layer_name, attributes or {},
+    )
+
+
+def _ogr_field_type(value):
+    if isinstance(value, bool):
+        return ogr.OFTInteger
+    if isinstance(value, int):
+        return ogr.OFTInteger64
+    if isinstance(value, float):
+        return ogr.OFTReal
+    return ogr.OFTString
+
+
+def _resolve_field_names(field_names, truncate):
+    """Map requested field names to the names actually written.
+
+    Shapefiles truncate at 10 characters, so ``obs_nitrate_2023`` and
+    ``obs_nitrate_2024`` both become ``obs_nitrat`` and one silently overwrites
+    the other. SCIMAP-Fitted names its columns after determinands, which is
+    exactly the case that collides, so refuse rather than lose a column.
+    """
+    if not truncate:
+        return {name: name for name in field_names}
+
+    resolved = {}
+    seen = {}
+    for name in field_names:
+        short = name[:10]
+        if short in seen:
+            raise ValueError(
+                f"Field names '{seen[short]}' and '{name}' both truncate to "
+                f"'{short}' in a shapefile. Write to GeoPackage (.gpkg) instead, "
+                "or shorten the names."
+            )
+        seen[short] = name
+        resolved[name] = short
+    return resolved
+
+
+def write_feature_layer(output_path, geometries, srs_wkt, records=None,
+                        geom_type=None, output_format="GPKG",
+                        layer_name="features"):
+    """Write many features with a shared attribute schema.
+
+    ``_write_single_geometry`` writes exactly one feature, which is all the
+    existing tools need; SCIMAP-Fitted produces one catchment polygon and one
+    snapped point *per observation site*, so it needs a multi-feature writer.
+
+    *records* is an optional list of dicts, one per geometry, all sharing the
+    same keys; the field type is taken from the first record's values.
+    """
+    geometries = list(geometries)
+    if not geometries:
+        raise ValueError("write_feature_layer needs at least one geometry")
+    records = list(records) if records is not None else [{} for _ in geometries]
+    if len(records) != len(geometries):
+        raise ValueError("records must have one entry per geometry")
+
+    driver_name = _driver_for(output_path, output_format)
+    driver = ogr.GetDriverByName(driver_name)
+    if driver is None:
+        raise RuntimeError(f"Could not load OGR driver for {output_path}")
+    if os.path.exists(output_path):
+        driver.DeleteDataSource(output_path)
+
+    srs = osr.SpatialReference()
+    if srs_wkt:
+        srs.ImportFromWkt(srs_wkt)
+
+    out_ds = driver.CreateDataSource(output_path)
+    if out_ds is None:
+        raise RuntimeError(f"Could not create output vector: {output_path}")
+
+    if geom_type is None:
+        geom_type = geometries[0].GetGeometryType()
+    out_layer = out_ds.CreateLayer(layer_name, srs=srs, geom_type=geom_type)
+
+    field_names = list(records[0].keys())
+    written_names = _resolve_field_names(field_names, driver_name == 'ESRI Shapefile')
+    for name in field_names:
+        out_layer.CreateField(ogr.FieldDefn(written_names[name],
+                                            _ogr_field_type(records[0][name])))
+
+    layer_defn = out_layer.GetLayerDefn()
+    for geometry, record in zip(geometries, records):
+        feature = ogr.Feature(layer_defn)
+        for name in field_names:
+            value = record.get(name)
+            if value is not None:
+                feature.SetField(written_names[name], value)
+        feature.SetGeometry(geometry)
+        out_layer.CreateFeature(feature)
+        feature = None
+
+    out_ds = None
+    return written_names
+
+
+def write_point_layer(points, output_path, srs_wkt, records=None,
+                      output_format="GPKG", layer_name="points"):
+    """Write ``(x, y)`` pairs as a point layer; see :func:`write_feature_layer`."""
+    geometries = []
+    for x, y in points:
+        geometry = ogr.Geometry(ogr.wkbPoint)
+        geometry.AddPoint(float(x), float(y))
+        geometries.append(geometry)
+    return write_feature_layer(
+        output_path, geometries, srs_wkt, records,
+        geom_type=ogr.wkbPoint, output_format=output_format, layer_name=layer_name,
+    )
+
+
+def write_polygon_layer(geometries, output_path, srs_wkt, records=None,
+                        output_format="GPKG", layer_name="catchments"):
+    """Write OGR polygon geometries as a layer; see :func:`write_feature_layer`."""
+    return write_feature_layer(
+        output_path, geometries, srs_wkt, records,
+        geom_type=ogr.wkbMultiPolygon, output_format=output_format,
+        layer_name=layer_name,
     )
 
 

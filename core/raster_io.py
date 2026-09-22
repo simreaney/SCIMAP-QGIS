@@ -23,29 +23,13 @@ def save_raster(np_array, output_path, reference_ds, data_type, mask_arr=None,
         np_array = np.nan_to_num(np_array, nan=NODATA)
 
     driver = gdal.GetDriverByName("GTiff")
-    if wbt_compatible:
-        # Some WhiteboxTools builds cannot read floating-point predictor
-        # compressed GeoTIFFs (PREDICTOR=3), so write plain rasters.
-        create_opts = [
-            "TILED=NO",
-            "COMPRESS=NONE",
-            "BIGTIFF=IF_SAFER",
-        ]
-    else:
-        predictor = "3" if data_type in (gdal.GDT_Float32, gdal.GDT_Float64) else "2"
-        create_opts = [
-            "TILED=YES",
-            "COMPRESS=LZW",
-            f"PREDICTOR={predictor}",
-            "BIGTIFF=IF_SAFER",
-        ]
     out_ds = driver.Create(
         output_path,
         np_array.shape[1],
         np_array.shape[0],
         1,
         data_type,
-        options=create_opts,
+        options=_creation_options(data_type, wbt_compatible),
     )
     out_ds.SetGeoTransform(reference_ds.GetGeoTransform())
     out_ds.SetProjection(reference_ds.GetProjection())
@@ -53,6 +37,98 @@ def save_raster(np_array, output_path, reference_ds, data_type, mask_arr=None,
     out_ds.GetRasterBand(1).SetNoDataValue(NODATA)
     out_ds.FlushCache()
     out_ds = None
+
+
+def _creation_options(data_type, wbt_compatible=False):
+    """GeoTIFF creation options shared by every writer here."""
+    if wbt_compatible:
+        # Some WhiteboxTools builds cannot read floating-point predictor
+        # compressed GeoTIFFs (PREDICTOR=3), so write plain rasters.
+        return ["TILED=NO", "COMPRESS=NONE", "BIGTIFF=IF_SAFER"]
+    predictor = "3" if data_type in (gdal.GDT_Float32, gdal.GDT_Float64) else "2"
+    return [
+        "TILED=YES",
+        "COMPRESS=LZW",
+        f"PREDICTOR={predictor}",
+        "BIGTIFF=IF_SAFER",
+    ]
+
+
+def save_multiband_raster(arrays, output_path, reference_ds, data_type,
+                          band_names=None, mask_arr=None):
+    """Write several equally-shaped arrays as consecutive bands of one GeoTIFF.
+
+    SCIMAP-Fitted's ensemble outputs are naturally paired — (mean, stdev) and
+    (median, IQR) — and belong in one file so they cannot drift apart on disk.
+    *band_names* are set as each band's description when given.
+    """
+    if not arrays:
+        raise ValueError("save_multiband_raster needs at least one array")
+    if band_names is not None and len(band_names) != len(arrays):
+        raise ValueError("band_names must have one entry per array")
+
+    shape = arrays[0].shape
+    if any(a.shape != shape for a in arrays):
+        raise ValueError("All bands must share the same shape")
+
+    driver = gdal.GetDriverByName("GTiff")
+    out_ds = driver.Create(
+        output_path,
+        shape[1],
+        shape[0],
+        len(arrays),
+        data_type,
+        options=_creation_options(data_type),
+    )
+    out_ds.SetGeoTransform(reference_ds.GetGeoTransform())
+    out_ds.SetProjection(reference_ds.GetProjection())
+
+    for index, array in enumerate(arrays, start=1):
+        if data_type == gdal.GDT_Float32 and array.dtype != np.float32:
+            array = array.astype(np.float32, copy=False)
+        if mask_arr is not None:
+            array = np.where(mask_arr, array, NODATA)
+        else:
+            array = np.nan_to_num(array, nan=NODATA)
+        band = out_ds.GetRasterBand(index)
+        band.WriteArray(array)
+        band.SetNoDataValue(NODATA)
+        if band_names is not None:
+            band.SetDescription(band_names[index - 1])
+
+    out_ds.FlushCache()
+    out_ds = None
+
+
+def create_output_dataset(output_path, width, height, bands, reference_ds,
+                          data_type, band_names=None, wbt_compatible=False):
+    """Create an empty GeoTIFF for callers that write it a row block at a time.
+
+    Returned open so the caller can ``GetRasterBand(n).WriteArray(block, 0,
+    row_start)`` as each block is finished; the caller must set the dataset to
+    ``None`` when done. This is how the ensemble stage avoids holding four
+    full-grid float32 accumulators in memory across its whole pass — the same
+    approach ``algorithms/flood.py`` already takes for its windowed outputs.
+    """
+    driver = gdal.GetDriverByName("GTiff")
+    out_ds = driver.Create(
+        output_path,
+        width,
+        height,
+        bands,
+        data_type,
+        options=_creation_options(data_type, wbt_compatible),
+    )
+    if out_ds is None:
+        raise RuntimeError(f"Could not create raster: {output_path}")
+    out_ds.SetGeoTransform(reference_ds.GetGeoTransform())
+    out_ds.SetProjection(reference_ds.GetProjection())
+    for index in range(1, bands + 1):
+        band = out_ds.GetRasterBand(index)
+        band.SetNoDataValue(NODATA)
+        if band_names is not None:
+            band.SetDescription(band_names[index - 1])
+    return out_ds
 
 
 def grids_match(ds_a, ds_b, tolerance=1e-9):

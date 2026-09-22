@@ -94,3 +94,34 @@ def matrix_to_lookup(matrix, value_type=float):
         except (TypeError, ValueError):
             continue
     return lookup
+
+
+def matrix_to_bounds(matrix):
+    """Convert a three-column QgsProcessingParameterMatrix into weight bounds.
+
+    The matrix arrives flat as ``[class, min, max, class, min, max, ...]``;
+    :func:`matrix_to_lookup` only understands two columns. Returns
+    ``{class_id: (lower, upper)}``, skipping blank rows. A row whose upper bound
+    is not above its lower bound is an error rather than something to silently
+    clamp — it would collapse that class to a constant and quietly remove a
+    dimension from the calibration.
+    """
+    bounds = {}
+    values = list(matrix or [])
+    for idx in range(0, len(values) - 2, 3):
+        key, low, high = values[idx], values[idx + 1], values[idx + 2]
+        if key in (None, '') or low in (None, '') or high in (None, ''):
+            continue
+        try:
+            class_id = int(float(key))
+            lower = float(low)
+            upper = float(high)
+        except (TypeError, ValueError):
+            continue
+        if not upper > lower:
+            raise ValueError(
+                f"Weight bounds for SCIMAP class {class_id} are not increasing: "
+                f"min={lower:g}, max={upper:g}."
+            )
+        bounds[class_id] = (lower, upper)
+    return bounds
