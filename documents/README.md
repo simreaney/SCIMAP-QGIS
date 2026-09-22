@@ -4,12 +4,6 @@ This guide describes every part of the **SCIMAP Toolkit** QGIS plugin: the guide
 panel and each of its twelve Processing tools. It is written for people using the
 plugin, not for developers — for the code, see [qgis_plugin/](../../qgis_plugin/).
 
-Each page has one or more screenshot placeholders, written as ordinary Markdown
-images pointing into a `screenshots/` folder next to this guide. Save a PNG at
-the path shown under each placeholder and it will appear automatically — no
-further editing needed. A suggested shot list is given as a caption under each
-placeholder.
-
 ## Start Here
 
 - [Overview and Installation](00-overview.md)
