@@ -1,7 +1,7 @@
 # The SCIMAP Panel
 
-The SCIMAP Panel is a dockable QGIS panel that mirrors the workflow of the
-SCIMAP web application inside QGIS: click-on-map pour points and impact
+The SCIMAP Panel is a dockable QGIS panel that covers the workflow of the
+SCIMAP mapping approach. You are able to click-on-map pour points and impact
 points, an editable risk weight table, and parameter set XML that is
 interchangeable with the web application. It wraps the same Processing
 algorithms documented elsewhere in this guide, so anything done here can also
@@ -21,9 +21,6 @@ The panel has five tabs — **Catchment**, **Parameters**, **Run**, **Flood**,
 **Results** — plus a **Progress** section with a progress bar, a Cancel button
 and a run log that stays visible under every tab.
 
-**Screenshot:**
-![The Progress section at the bottom of the panel, mid-run](screenshots/01-scimap-panel/progress-section.png)
-*The Progress group during a run: progress bar, Cancel button, and the scrolling log.*
 
 ## Catchment tab
 
