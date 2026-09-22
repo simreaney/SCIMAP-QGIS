@@ -1,0 +1,52 @@
+site_name: SCIMAP Toolkit for QGIS
+site_description: User guide for the SCIMAP Toolkit QGIS plugin
+repo_url: https://github.com/simreaney/SCIMAP-QGIS
+repo_name: simreaney/SCIMAP-QGIS
+edit_uri: edit/main/documents/
+
+docs_dir: documents
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.instant
+    - toc.integrate
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+nav:
+  - Home: README.md
+  - Start Here:
+      - Overview and Installation: 00-overview.md
+      - The SCIMAP Panel: 01-scimap-panel.md
+  - Core Workflow Tools:
+      - Delineate Catchment: 02-delineate-catchment.md
+      - Apply Land Cover Risk Weights: 03-apply-land-cover-risk-weights.md
+      - SCIMAP Sediment: 04-scimap-sediment.md
+      - SCIMAP FIO: 05-scimap-fio.md
+      - Network Index: 06-network-index.md
+      - SCIMAP Flood: 07-scimap-flood.md
+      - Overland Flow Distance to Point: 08-overland-flow-distance-to-point.md
+      - Export SCIMAP Results: 09-export-scimap-results.md
+      - Create Web Dashboard: 10-create-web-dashboard.md
+  - SCIMAP Fitted:
+      - 1. Catchment Statistics: 11-fitted-1-catchment-statistics.md
+      - 2. Calibrate Weights: 12-fitted-2-calibrate-weights.md
+      - 3. Ensemble Risk Maps: 13-fitted-3-ensemble-risk-maps.md
