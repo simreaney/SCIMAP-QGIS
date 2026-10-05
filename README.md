@@ -275,27 +275,6 @@ correct but noticeably slower on large rasters.
 The web dashboard needs nothing beyond NumPy and GDAL, both of which ship with
 QGIS. It does not use matplotlib.
 
-## Installation
-
-### Install from ZIP (recommended)
-
-1. Zip the `qgis_plugin` folder so the archive root contains `metadata.txt`,
-   `__init__.py`, `scimap_provider.py` and the `core/`, `algorithms/`, `data/`,
-   `gui/` and `icons/` directories.
-2. **Plugins → Manage and Install Plugins… → Install from ZIP**.
-3. Select the ZIP and install, then enable the plugin if prompted.
-
-### Install as a development folder
-
-Copy the `qgis_plugin` directory into your QGIS profile plugins directory and
-restart QGIS:
-
-- macOS: `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/`
-- Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/`
-- Windows: `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\`
-
-(Substitute `QGIS4` for a QGIS 4 profile.)
-
 ## Tips
 
 - The stream initiation threshold is area-based and converted internally to a
@@ -320,17 +299,6 @@ restart QGIS:
   WhiteboxTools directly and so run on the main thread. Progress still updates
   and Cancel still works.
 
-## Upgrading from 1.x
-
-- `scimap_algorithm.py` still exports every algorithm class, so existing scripts
-  and saved models keep working. New code should import from the `algorithms`
-  and `core` packages.
-- Sediment now reclassifies land cover by default. To keep 1.x behaviour, tick
-  **Land cover is already a risk weighting**.
-- The plugin no longer imports anything from the SCIMAP web application. Earlier
-  versions silently used the web app's connectivity implementation when run from
-  inside the `scimap-app` repository, which could give different results to a
-  distributed ZIP; only the plugin's own implementation is used now.
 
 ## Citation
 
