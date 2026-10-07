@@ -6,3 +6,4 @@ SCIMAP-QGIS.zip
 /data/__pycache__
 /gui/__pycache__
 /site
+.DS_Store
