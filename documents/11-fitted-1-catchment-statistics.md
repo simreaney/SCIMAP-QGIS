@@ -20,7 +20,7 @@ also be summarised, and any of them chosen as the calibration target in step 2.
 Catchment Statistics**; toolbar icon; `&SCIMAP` menu.
 
 **Screenshot:**
-<img src="screenshots/11-fitted-1-catchment-statistics/dialog.png" alt="SCIMAP Fitted 1 Processing dialog" style="max-width: 100%; height: auto;" />  
+![SCIMAP Fitted 1 Processing dialog](screenshots/11-fitted-1-catchment-statistics/dialog.png)  
 *The Processing dialog with the observation sites layer and its ID/value fields chosen.*
 
 ## Parameters

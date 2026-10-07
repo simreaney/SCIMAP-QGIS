@@ -17,7 +17,7 @@ recompute hydrology, and expect tens of minutes on a large grid.
 Risk Maps**; toolbar icon; `&SCIMAP` menu.
 
 **Screenshot:**
-<img src="screenshots/13-fitted-3-ensemble-risk-maps/dialog.png" alt="SCIMAP Fitted 3 Processing dialog" style="max-width: 100%; height: auto;" />  
+![SCIMAP Fitted 3 Processing dialog](screenshots/13-fitted-3-ensemble-risk-maps/dialog.png)  
 *The Processing dialog with the calibrated weights CSV and connectivity/land-cover raster lists populated.*
 
 ## Parameters
@@ -57,11 +57,11 @@ Risk Maps**; toolbar icon; `&SCIMAP` menu.
 | Summary histograms folder (optional) | PNG histograms of the combination and network risk distributions (needs matplotlib). |
 
 **Screenshot:**
-<img src="screenshots/13-fitted-3-ensemble-risk-maps/mean-stdev-map.png" alt="Fitted risk mean/standard-deviation raster styled in QGIS" style="max-width: 100%; height: auto;" />
+![Fitted risk mean/standard-deviation raster styled in QGIS](screenshots/13-fitted-3-ensemble-risk-maps/mean-stdev-map.png)
 *The mean/stdev output styled in the QGIS map canvas.*
 
 **Screenshot:**
-<img src="screenshots/13-fitted-3-ensemble-risk-maps/no-regrets-map.png" alt="No-regrets priority raster styled in QGIS" style="max-width: 100%; height: auto;" />
+![No-regrets priority raster styled in QGIS](screenshots/13-fitted-3-ensemble-risk-maps/no-regrets-map.png)
 *A no-regrets priority raster, showing the cells worth acting on regardless of which calibrated weight set is correct.*
 
 ## Notes

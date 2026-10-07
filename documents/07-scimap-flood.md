@@ -20,7 +20,7 @@ icon ("Run SCIMAP Flood"); `&SCIMAP` menu; or the
 impact points and a shortcut to compute the overland flow distance rasters.
 
 **Screenshot:**
-<img src="screenshots/07-scimap-flood/dialog.png" alt="SCIMAP Flood Processing dialog" style="max-width: 100%; height: auto;" />
+![SCIMAP Flood Processing dialog](screenshots/07-scimap-flood/dialog.png)
 *The Processing dialog with rainfall and overland-flow-distance raster lists populated.*
 
 ## Parameters

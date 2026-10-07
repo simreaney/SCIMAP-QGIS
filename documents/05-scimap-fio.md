@@ -16,7 +16,7 @@ icon ("Run SCIMAP FIO"); `&SCIMAP` menu; or the [SCIMAP Panel](01-scimap-panel.m
 Run tab with **Mapping type** set to SCIMAP FIO.
 
 **Screenshot:**
-<img src="screenshots/05-scimap-fio/dialog.png" alt="SCIMAP FIO Processing dialog" style="max-width: 100%; height: auto;" />  
+![SCIMAP FIO Processing dialog](screenshots/05-scimap-fio/dialog.png)  
 *The full Processing dialog for SCIMAP-FIO*
 
 ## Parameters

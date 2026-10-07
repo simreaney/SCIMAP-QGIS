@@ -9,7 +9,7 @@ Results**; or the [SCIMAP Panel](01-scimap-panel.md)'s Results tab, via the
 **Export…** button. There is no toolbar icon for this tool.
 
 **Screenshot:**
-<img src="screenshots/09-export-scimap-results/dialog.png" alt="Export SCIMAP Results Processing dialog" style="max-width: 100%; height: auto;" />  
+![Export SCIMAP Results Processing dialog](screenshots/09-export-scimap-results/dialog.png)  
 *The Processing dialog with raster and vector inputs chosen and all four output formats enabled.*
 
 ## Parameters

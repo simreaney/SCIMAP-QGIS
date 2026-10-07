@@ -14,7 +14,7 @@ The panel docks to the right-hand side of the QGIS window by default and can be
 dragged, floated or closed like any other dock widget.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/panel-overview.png" alt="The SCIMAP Panel docked in QGIS, showing all five tabs" style="max-width: 100%; height: auto;" />  
+![The SCIMAP Panel docked in QGIS, showing all five tabs](screenshots/01-scimap-panel/panel-overview.png)  
 *The whole panel docked in the QGIS main window, wide enough to show its tab bar.*
 
 The panel has five tabs — **Catchment**, **Parameters**, **Run**, **Flood**,
@@ -43,7 +43,7 @@ to the map and can then be selected as the optional **Catchment area** input on
 the Run tab.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/catchment-tab.png" alt="The Catchment tab with a pour point picked on the map" style="max-width: 100%; height: auto;" />  
+![The Catchment tab with a pour point picked on the map](screenshots/01-scimap-panel/catchment-tab.png)  
 *The Catchment tab, ideally with "Pick on map" active and a pour point marker visible on the canvas.*
 
 ## Parameters tab
@@ -53,7 +53,7 @@ These weights can be shared with the SCIMAP web application as XML, so a
 parameter set built in one can be reused in the other.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/parameters-tab.png" alt="The Parameters tab showing the editable risk weight table" style="max-width: 100%; height: auto;" />
+![The Parameters tab showing the editable risk weight table](screenshots/01-scimap-panel/parameters-tab.png)
 *The Parameters tab: the class/land-cover/risk-weight table, the SCIMAP-classes checkbox, and the Reset/Import/Export buttons.*
 
 - The table lists each SCIMAP class, its land cover label, and an editable risk
@@ -89,7 +89,7 @@ dialog…** to jump to the full [SCIMAP Sediment](04-scimap-sediment.md) /
 [SCIMAP FIO](05-scimap-fio.md) dialog with every parameter exposed.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/run-tab.png" alt="The Run tab set up for a SCIMAP Sediment run" style="max-width: 100%; height: auto;" />  
+![The Run tab set up for a SCIMAP Sediment run](screenshots/01-scimap-panel/run-tab.png)  
 *The Run tab with Mapping type, DEM, land cover and rainfall layers chosen.*
 
 ## Flood tab
@@ -99,7 +99,7 @@ rainfall pattern and overland flow distance rasters, with impact points picked
 on the map.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/flood-tab.png" alt="The Flood tab with impact points picked on the map" style="max-width: 100%; height: auto;" />  
+![The Flood tab with impact points picked on the map](screenshots/01-scimap-panel/flood-tab.png)  
 *The Flood tab: connectivity/runoff layer combos, the rainfall and overland-flow-distance raster lists, and the Impact points group with markers visible on the canvas.*
 
 **Fields:**
@@ -122,7 +122,7 @@ Lists every layer produced in the current panel session and offers quick
 actions on the selected one, plus access to export and the web dashboard.
 
 **Screenshot:**
-<img src="screenshots/01-scimap-panel/results-tab.png" alt="The Results tab with a run's output layers listed" style="max-width: 100%; height: auto;" />
+![The Results tab with a run's output layers listed](screenshots/01-scimap-panel/results-tab.png)
 *The Results tab: the session's layer list, the colour ramp row, Zoom/Export buttons, and the Web dashboard and Settings groups.*
 
 - **Layers produced in this session** — every raster/vector this panel has

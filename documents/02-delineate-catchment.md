@@ -15,7 +15,7 @@ Catchment**; toolbar icon; `&SCIMAP` menu → **Delineate Catchment**; or the
 the same tool.
 
 **Screenshot:**
-<img src="screenshots/02-delineate-catchment/dialog.png" alt="Delineate Catchment Processing dialog" style="max-width: 100%; height: auto;" />  
+![Delineate Catchment Processing dialog](screenshots/02-delineate-catchment/dialog.png)  
 *The Processing dialog, with a pour point already picked on the map.*
 
 ## Parameters
