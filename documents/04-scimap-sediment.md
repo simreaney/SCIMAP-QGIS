@@ -17,7 +17,7 @@ toolbar icon ("Run SCIMAP Sediment"); `&SCIMAP` menu; or the
 SCIMAP Sediment.
 
 **Screenshot:**
-![SCIMAP Sediment Processing dialog](screenshots/04-scimap-sediment/dialog.png)
+<img src="screenshots/04-scimap-sediment/dialog.png" alt="SCIMAP Sediment Processing dialog" style="max-width: 100%; height: auto;" />  
 *The full Processing dialog, scrolled to show the risk-weight table and stream/connectivity options.*
 
 ## Parameters

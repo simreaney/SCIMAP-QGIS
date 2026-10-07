@@ -15,8 +15,8 @@ Point**; toolbar icon; `&SCIMAP` menu; or the
 after picking impact points on the map.
 
 **Screenshot:**
-![Overland Flow Distance to Point Processing dialog](screenshots/08-overland-flow-distance-to-point/dialog.png)
-*The Processing dialog.*
+<img src="screenshots/08-overland-flow-distance-to-point/dialog.png" alt="Overland Flow Distance to Point Processing dialog" style="max-width: 100%; height: auto;" />  
+*The Overland Flow Distance to Point Processing dialog.*
 
 ## Parameters
 

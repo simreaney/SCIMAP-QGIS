@@ -20,7 +20,7 @@ icon ("Run SCIMAP Flood"); `&SCIMAP` menu; or the
 impact points and a shortcut to compute the overland flow distance rasters.
 
 **Screenshot:**
-![SCIMAP Flood Processing dialog](screenshots/07-scimap-flood/dialog.png)
+<img src="screenshots/07-scimap-flood/dialog.png" alt="SCIMAP Flood Processing dialog" style="max-width: 100%; height: auto;" />
 *The Processing dialog with rainfall and overland-flow-distance raster lists populated.*
 
 ## Parameters
@@ -63,13 +63,8 @@ invalid.
 
 ## Notes
 
-- All four rasters must be aligned to a common grid — this tool does not
-  resample them.
-- Runs window-by-window rather than loading whole rasters into memory, so peak
-  memory use does not scale with raster size.
-- The mean/standard-deviation pair is best read together: high mean with low
-  standard deviation is a dependable flood-response hotspot; high mean with
-  high standard deviation depends heavily on the specific rainfall pattern and
-  impact point chosen.
+- All four rasters must be aligned to a common grid — this tool does not resample them.
+- Runs window-by-window rather than loading whole rasters into memory, so peak memory use does not scale with raster size.
+- The mean/standard-deviation pair is best read together: high mean with low standard deviation is a dependable flood-response hotspot; high mean with high standard deviation depends heavily on the specific rainfall pattern and impact point chosen.
 
 Next: [Overland Flow Distance to Point](08-overland-flow-distance-to-point.md).

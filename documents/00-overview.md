@@ -36,7 +36,7 @@ Install like any other QGIS plugin, from the QGIS Plugin Repository:
 3. Enable the **SCIMAP Toolkit** checkbox in the plugin list.
 
 **Screenshot:**
-![QGIS Plugin Manager showing SCIMAP Toolkit installed and enabled](screenshots/00-overview/plugin-manager.png)
+<img src="screenshots/00-overview/plugin-manager.png" alt="QGIS Plugin Manager showing SCIMAP Toolkit installed and enabled" style="max-width: 100%; height: auto;" />  
 *Plugins → Manage and Install Plugins, with SCIMAP Toolkit shown installed/enabled.*
 
 ## Where the plugin appears
@@ -52,11 +52,11 @@ Once enabled, SCIMAP adds itself in three places:
   they can be run from there or chained into Processing models.
 
 **Screenshot:**
-![Plugins menu showing the SCIMAP submenu](screenshots/00-overview/plugins-menu.png)
+<img src="screenshots/00-overview/plugins-menu.png" alt="Plugins menu showing the SCIMAP submenu" style="max-width: 100%; height: auto;" />  
 *Plugins → SCIMAP, showing the panel toggle and every tool shortcut.*
 
 **Screenshot:**
-![Processing Toolbox with the SCIMAP provider expanded](screenshots/00-overview/processing-toolbox.png)
+<img src="screenshots/00-overview/processing-toolbox.png" alt="Processing Toolbox with the SCIMAP provider expanded" style="max-width: 100%; height: auto;" />  
 *Processing Toolbox → SCIMAP, expanded to show every algorithm and its group.*
 
 ## Two ways to work

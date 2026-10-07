@@ -17,7 +17,7 @@ Cover Risk Weights**; toolbar icon; `&SCIMAP` menu → **Apply Land Cover Risk
 Weights**.
 
 **Screenshot:**
-![Apply Land Cover Risk Weights Processing dialog](screenshots/03-apply-land-cover-risk-weights/dialog.png)
+<img src="screenshots/03-apply-land-cover-risk-weights/dialog.png" alt="Apply Land Cover Risk Weights Processing dialog" style="max-width: 100%; height: auto;" />  
 *The Processing dialog, showing the remap and weight matrix tables.*
 
 ## Parameters

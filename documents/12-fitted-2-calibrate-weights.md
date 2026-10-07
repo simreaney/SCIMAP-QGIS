@@ -18,7 +18,7 @@ as much as the fit.
 Calibrate Weights**; toolbar icon; `&SCIMAP` menu.
 
 **Screenshot:**
-![SCIMAP Fitted 2 Processing dialog](screenshots/12-fitted-2-calibrate-weights/dialog.png)
+<img src="screenshots/12-fitted-2-calibrate-weights/dialog.png" alt="SCIMAP Fitted 2 Processing dialog" style="max-width: 100%; height: auto;" />  
 *The Processing dialog with the statistics table input and weight search range table.*
 
 ## Parameters
@@ -69,11 +69,11 @@ is off by default because its cost grows sharply with *k*, and the tool warns
 before committing to a run it estimates will take more than ten minutes.
 
 **Screenshot:**
-![Example dotty plot from the diagnostic plots folder](screenshots/12-fitted-2-calibrate-weights/dotty-plot.png)
+<img src="screenshots/12-fitted-2-calibrate-weights/dotty-plot.png" alt="Example dotty plot from the diagnostic plots folder" style="max-width: 100%; height: auto;" />
 *The dotty plot: rank score against each class's sampled weight, showing which classes the data actually constrain.*
 
 **Screenshot:**
-![Example weight boxplot from the diagnostic plots folder](screenshots/12-fitted-2-calibrate-weights/weight-boxplot.png)
+<img src="screenshots/12-fitted-2-calibrate-weights/weight-boxplot.png" alt="Example weight boxplot from the diagnostic plots folder" style="max-width: 100%; height: auto;" />
 *The weight boxplot for the best-fitting sets.*
 
 ## Notes

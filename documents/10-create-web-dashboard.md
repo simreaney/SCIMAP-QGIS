@@ -15,8 +15,8 @@ Dashboard**; toolbar icon; `&SCIMAP` menu; or the
 (or automatically after each run, if **Build one after each run** is ticked).
 
 **Screenshot:**
-![Create Web Dashboard Processing dialog](screenshots/10-create-web-dashboard/dialog.png)
-*The Processing dialog, scrolled to show the named result-layer slots.*
+<img src="screenshots/10-create-web-dashboard/dialog.png" alt="Create Web Dashboard Processing dialog" style="max-width: 100%; height: auto;" />  
+*The Create Web Dashboard Processing dialog.*
 
 ## Parameters
 
@@ -51,15 +51,15 @@ are available and leave the rest blank.
 ## Screenshots of the dashboard itself
 
 **Screenshot:**
-![The dashboard's 2D map view](screenshots/10-create-web-dashboard/dashboard-2d-map.png)
+<img src="screenshots/10-create-web-dashboard/dashboard-2d-map.png" alt="The dashboard's 2D map view" style="max-width: 100%; height: auto;" />
 *The dashboard's 2D map, open in a browser, with the layer list and a result layer switched on.*
 
 **Screenshot:**
-![The dashboard's 3D terrain view](screenshots/10-create-web-dashboard/dashboard-3d-view.png)
+<img src="screenshots/10-create-web-dashboard/dashboard-3d-view.png" alt="The dashboard's 3D terrain view" style="max-width: 100%; height: auto;" />
 *The 3D terrain view with a risk layer draped over it.*
 
 **Screenshot:**
-![The dashboard's charts](screenshots/10-create-web-dashboard/dashboard-charts.png)
+<img src="screenshots/10-create-web-dashboard/dashboard-charts.png" alt="The dashboard's charts" style="max-width: 100%; height: auto;" />
 *One of the dashboard's interactive charts (e.g. the risk-concentration chart).*
 
 ## Notes

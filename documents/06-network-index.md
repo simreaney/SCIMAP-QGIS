@@ -10,7 +10,7 @@ connectivity, and as a pre-computed **Connectivity** input to
 icon ("Run SCIMAP Network Index"); `&SCIMAP` menu.
 
 **Screenshot:**
-![Network Index Processing dialog](screenshots/06-network-index/dialog.png)
+<img src="screenshots/06-network-index/dialog.png" alt="Network Index Processing dialog" style="max-width: 100%; height: auto;" />  
 *The Processing dialog with the connectivity algorithm and Wetness-Connectivity Curve outputs visible.*
 
 ## Parameters
@@ -41,7 +41,7 @@ icon ("Run SCIMAP Network Index"); `&SCIMAP` menu.
   warning explains why the plot/CSV were skipped.
 
 **Screenshot:**
-![Example Wetness-Connectivity Curve plot](screenshots/06-network-index/wetness-connectivity-curve.png)
+<img src="screenshots/06-network-index/wetness-connectivity-curve.png" alt="Example Wetness-Connectivity Curve plot" style="max-width: 100%; height: auto;" />
 *An example Wetness-Connectivity Curve PNG output.*
 
 Next: [SCIMAP Flood](07-scimap-flood.md).
