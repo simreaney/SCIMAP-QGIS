@@ -180,29 +180,37 @@
    *  Built only when exporting. Nothing can see it on screen — the camera is
    *  capped just above the horizon — and it would double the scene's triangle
    *  count for nothing. A printable solid needs it.
+   *
+   *  Indexed on the terrain's own vertex numbering rather than three fresh
+   *  vertices per triangle: the same triangles in the same order, with each
+   *  vertex stored once instead of about six times, which is what keeps a
+   *  text format like USDZ a sensible size.
    */
   function buildBaseCap(built) {
     var positions = built.positions;
     var indices = built.indices;
     if (!indices.length) return null;
 
-    var vertices = new Float32Array(indices.length * 3);
-    var normals = new Float32Array(indices.length * 3);
+    var vertices = new Float32Array(positions.length);
+    var normals = new Float32Array(positions.length);
+    for (var v = 0; v < positions.length; v += 3) {
+      vertices[v] = positions[v];
+      vertices[v + 1] = positions[v + 1];
+      vertices[v + 2] = baseZ;
+      normals[v + 2] = -1;
+    }
+    var reversed = new Array(indices.length);
     for (var i = 0; i < indices.length; i += 3) {
       // Reversed winding: a, b, c instead of the surface's a, c, b.
-      var order = [indices[i], indices[i + 2], indices[i + 1]];
-      for (var v = 0; v < 3; v++) {
-        var at = (i + v) * 3, from = order[v] * 3;
-        vertices[at] = positions[from];
-        vertices[at + 1] = positions[from + 1];
-        vertices[at + 2] = baseZ;
-        normals[at] = 0; normals[at + 1] = 0; normals[at + 2] = -1;
-      }
+      reversed[i] = indices[i];
+      reversed[i + 1] = indices[i + 2];
+      reversed[i + 2] = indices[i + 1];
     }
 
     var geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    geometry.setIndex(reversed);
     return new THREE.Mesh(geometry, rockMaterial());
   }
 
@@ -596,8 +604,15 @@
   function exportGroup(withBase) {
     if (!terrain) return null;
     var group = new THREE.Group();
-    group.add(terrain.clone());
-    if (skirt) group.add(skirt.clone());
+    // Named, so the parts are labelled in Blender and in the USDZ.
+    var surface = terrain.clone();
+    surface.name = 'Terrain';
+    group.add(surface);
+    if (skirt) {
+      var sides = skirt.clone();
+      sides.name = 'Sides';
+      group.add(sides);
+    }
 
     // The underside, built here only. Surface + sides + base is a closed
     // solid: every edge belongs to exactly two triangles, which is what a
@@ -609,6 +624,7 @@
     if (withBase !== false) {
       var cap = terrainBuild ? buildBaseCap(terrainBuild) : null;
       if (cap) {
+        cap.name = 'Base';
         cap.scale.z = terrain.scale.z;    // match the exaggeration on screen
         group.add(cap);
       }
@@ -627,8 +643,10 @@
    * millimetres, so one unit is one millimetre. glTF defines its unit as the
    * metre. The same physical object is therefore a thousand times smaller in
    * glTF than in STL, and using one number for both gives a model 1000x wrong
-   * in whichever world you did not think about. */
-  var UNITS_PER_MM = {stl: 1, obj: 1, glb: 0.001};
+   * in whichever world you did not think about. USDZ is written in metres
+   * too, and AR Quick Look shows it at that true size: a 200 mm model stands
+   * on the table 200 mm across. */
+  var UNITS_PER_MM = {stl: 1, obj: 1, glb: 0.001, usdz: 0.001};
 
   /** Shrink *group* until its longest side is *sizeMm*, and stand it on z = 0.
    *
@@ -719,6 +737,14 @@
         if (!THREE.OBJExporter) { done(null, 'the OBJ exporter is missing'); return; }
         done(new Blob([new THREE.OBJExporter().parse(group)],
                       {type: 'text/plain'}), 'obj');
+        return;
+      }
+      if (format === 'usdz') {
+        if (!global.SCIMAP_USDZ) { done(null, 'the USDZ writer is missing'); return; }
+        // Asynchronous for the same reason as glTF: the drape becomes a PNG.
+        global.SCIMAP_USDZ.build(group, function (blob, reason) {
+          done(blob, blob ? 'usdz' : reason);
+        });
         return;
       }
       if (!THREE.GLTFExporter) { done(null, 'the glTF exporter is missing'); return; }

@@ -68,6 +68,9 @@ are available and leave the rest blank.
   required beyond the destination folder, though a DEM is strongly recommended
   for a useful dashboard.
 - The dashboard can also export the 2D map as a PNG and the 3D terrain as
-  glTF/STL/OBJ from within the dashboard itself, once opened.
+  glTF/USDZ/STL/OBJ from within the dashboard itself, once opened. USDZ opens
+  in AR Quick Look on an iPhone or iPad, at the printed size.
+- The 3D terrain shows one layer at a time: the layer you most recently
+  ticked, or the one whose **3D** button you pressed.
 
 Next: [SCIMAP Fitted 1: Catchment Statistics](11-fitted-1-catchment-statistics.md).

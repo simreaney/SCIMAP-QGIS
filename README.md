@@ -231,13 +231,16 @@ It gives you:
   (4000 px) size, with a scale bar, drawn from the embedded data with whatever
   layers, opacities and stream colours you have set;
 - **3D model export**: save the catchment as `.glb` (keeps the draped colours,
-  opens in Blender or any glTF viewer), `.stl` or `.obj`. Every format is a
+  opens in Blender or any glTF viewer), `.usdz` (keeps the draped colours,
+  opens in AR Quick Look on an iPhone or iPad and stands on the table at the
+  printed size), `.stl` or `.obj`. Every format is a
   closed, watertight solid — surface, sides and a flat base — so it can be
   3D printed without repairing the mesh first. Set the printed size with the
   slider (200 mm by default); the model is scaled to fit that box, centred and
   standing on zero, and the panel shows the finished dimensions and the map
-  scale. STL and OBJ come out in millimetres, glTF in metres, each being the
-  unit those formats are read in;
+  scale. STL and OBJ come out in millimetres, glTF and USDZ in metres, each
+  being the unit those formats are read in. The 3D view drapes the layer you
+  most recently ticked, or the one whose **3D** button you pressed;
 - **downloads**: your full-resolution results in their original projection,
   plus `provenance.json` and SHA-256 checksums;
 - **provenance**: the parameters, risk weights, input layers, CRS and software

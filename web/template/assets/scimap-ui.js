@@ -40,6 +40,7 @@
         return layer.defaultVisible && layer.drape3d;
       })[0] || global.SCIMAP.rasterLayers()[0];
       if (first) global.SCIMAP.state.drape = first.key;
+      markDrape();          // the rail was built before the drape was chosen
 
       // The map must exist before the feature toggles: they list the vector
       // layers it actually managed to add.
@@ -89,6 +90,7 @@
       toggle.checked = !!layer.defaultVisible;
       toggle.addEventListener('change', function () {
         global.SCIMAP.setLayerVisible(layer.key, toggle.checked);
+        followDrape(layer, toggle.checked);
       });
 
       var label = make('label', 'layer-name', layer.label);
@@ -135,6 +137,32 @@
     if (!global.SCIMAP.rasterLayers().length) {
       host.appendChild(make('p', 'chart-note', 'No raster layers in this export.'));
     }
+    markDrape();
+  }
+
+  /** Keep the 3D drape in step with the layer ticks.
+   *
+   * The terrain wears one layer at a time, but the ticks are what people reach
+   * for: leaving the drape to the small 3D buttons alone meant ticking a layer
+   * in the 3D view changed nothing on screen. So ticking a layer drapes it,
+   * and unticking the draped one hands the terrain to the next layer still
+   * ticked, or to bare relief. The 3D buttons still pick a drape directly.
+   */
+  function followDrape(layer, visible) {
+    var current = global.SCIMAP.state.drape, next = current;
+    if (visible && layer.drape3d) {
+      next = layer.key;
+    } else if (!visible && current === layer.key) {
+      // Read the ticks, not state.visible: the 2D map only fills that in for
+      // layers it made tiles for.
+      var other = global.SCIMAP.rasterLayers().filter(function (candidate) {
+        var box = $('toggle-' + candidate.key);
+        return candidate.drape3d && box && box.checked;
+      })[0];
+      next = other ? other.key : null;
+    }
+    if (next === current) return;
+    global.SCIMAP.setState({drape: next}, 'drape');
     markDrape();
   }
 
